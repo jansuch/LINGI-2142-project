@@ -153,23 +153,44 @@ class MyTopology(IPTopo):
         par_gsw_sbb1_nc5 = self.addRouter("par_1", config=RouterConfig)
         par_th2_sbb1_nc5 = self.addRouter("par_2", config=RouterConfig)
 
-        # adding OSPF as IGP
+        # adding BGP and OSPF as IGP
         lon_thw_sbb1_nc5.addDaemon(OSPF)
         lon_drch_sbb1_nc5.addDaemon(OSPF)
+        lon_thw_sbb1_nc5.addDaemon(BGP)
+        lon_drch_sbb1_nc5.addDaemon(BGP)
         
         gra_g1_nc5.addDaemon(OSPF)
         gra_g2_nc5.addDaemon(OSPF)
+        gra_g1_nc5.addDaemon(BGP)
+        gra_g2_nc5.addDaemon(BGP)
         
         fra_fr5_sbb1_nc5.addDaemon(OSPF)
         fra_fr5_sbb2_nc5.addDaemon(OSPF)
         fra_1_n7.addDaemon(OSPF)
         fra_5_n7.addDaemon(OSPF)
+        fra_fr5_sbb1_nc5.addDaemon(BGP)
+        fra_fr5_sbb2_nc5.addDaemon(BGP)
+        fra_1_n7.addDaemon(BGP)
+        fra_5_n7.addDaemon(BGP)
         
         rbx_g2_nc5.addDaemon(OSPF)
         rbx_g1_nc5.addDaemon(OSPF)
+        rbx_g2_nc5.addDaemon(BGP)
+        rbx_g1_nc5.addDaemon(BGP)
         
         par_gsw_sbb1_nc5.addDaemon(OSPF)
         par_th2_sbb1_nc5.addDaemon(OSPF)
+        par_gsw_sbb1_nc5.addDaemon(BGP)
+        par_th2_sbb1_nc5.addDaemon(BGP)
+
+        routers = [lon_thw_sbb1_nc5,lon_drch_sbb1_nc5,
+                gra_g1_nc5, gra_g2_nc5,
+                fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5,fra_1_n7,fra_5_n7,
+                rbx_g1_nc5,rbx_g2_nc5,
+                par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
+	
+        self.addiBGPFullMesh(1, routers=routers)
+        self.addAS(16276, routers=routers)
         
         # adding OSPF6 as IGP
         lon_thw_sbb1_nc5.addDaemon(OSPF6)
