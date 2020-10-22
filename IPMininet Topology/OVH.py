@@ -3,7 +3,7 @@
 from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
-from ipmininet.router.config import BGP, OSPF6, RouterConfig, AF_INET6, set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF
+from ipmininet.router.config import BGP, OSPF6, RouterConfig, AF_INET6, set_rr, ebgp_session, SHARE, iBGPFullMesh, AF_INET, OSPF
 
 
 class MyTopology(IPTopo):
@@ -111,42 +111,42 @@ class MyTopology(IPTopo):
 
         lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0100::/64", "192.148.1.0/32"])
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0101::/64", "192.148.1.1/32"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.0/30"])
-
+        self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0::/64"])
+        
         gra_g1_nc5 = self.addRouter("gra_1", config=RouterConfig,lo_addresses=["2001:41D0:0000:0102::/64", "192.148.1.2/32"])
         gra_g2_nc5 = self.addRouter("gra_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0104::/64", "192.148.1.3/32"])
-        self.addSubnet(nodes=[gra_g1_nc5, gra_g2_nc5], subnets=["192.148.0.4/30"])
-        self.addSubnet(nodes=[gra_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.0.8/30"])
-        self.addSubnet(nodes=[gra_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.12/30"])
-
+        self.addSubnet(nodes=[gra_g1_nc5, gra_g2_nc5], subnets=["192.148.0.4/30","2001:41D0:0:4::/64"])
+        self.addSubnet(nodes=[gra_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.0.8/30","2001:41D0:0:8::/64"])
+        self.addSubnet(nodes=[gra_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.12/30","2001:41D0:0:12::/64"])
+        
         fra_fr5_sbb1_nc5 = self.addRouter("fra_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0105::/64", "192.148.1.4/32"])
         fra_fr5_sbb2_nc5 = self.addRouter("fra_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0106::/64", "192.148.1.5/32"])
         fra_1_n7 = self.addRouter("fra_3", config=RouterConfig, lo_addresses=["2001:41D0:0000:0107::/64", "192.148.1.6/32"])
         fra_5_n7 = self.addRouter("fra_4", config=RouterConfig, lo_addresses=["2001:41D0:0000:0108::/64", "192.148.1.7/32"])
-        self.addSubnet(nodes=[fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.16/30"])
-        self.addSubnet(nodes=[fra_1_n7, fra_5_n7], subnets=["192.148.0.20/30"])
-        self.addSubnet(nodes=[fra_1_n7, fra_fr5_sbb1_nc5], subnets=["192.148.0.24/30"])
-        self.addSubnet(nodes=[fra_1_n7, fra_fr5_sbb2_nc5], subnets=["192.148.0.28/30"])
-        self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb1_nc5], subnets=["192.148.0.32/30"])
-        self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb2_nc5], subnets=["192.148.0.36/30"])
-        self.addSubnet(nodes=[gra_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.0.40/30"])
-        self.addSubnet(nodes=[gra_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.44/30"])
-
+        self.addSubnet(nodes=[fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.16/30","2001:41D0:0:16::/64"])
+        self.addSubnet(nodes=[fra_1_n7, fra_5_n7], subnets=["192.148.0.20/30","2001:41D0:0:20::/64"])
+        self.addSubnet(nodes=[fra_1_n7, fra_fr5_sbb1_nc5], subnets=["192.148.0.24/30","2001:41D0:0:20::/64"])
+        self.addSubnet(nodes=[fra_1_n7, fra_fr5_sbb2_nc5], subnets=["192.148.0.28/30","2001:41D0:0:24::/64"])
+        self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb1_nc5], subnets=["192.148.0.32/30","2001:41D0:0:28::/64"])
+        self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb2_nc5], subnets=["192.148.0.36/30","2001:41D0:0:32::/64"])  
+        self.addSubnet(nodes=[gra_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.0.40/30","2001:41D0:0:36::/64"])
+        self.addSubnet(nodes=[gra_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.44/30","2001:41D0:0:40::/64"])     
+        
         rbx_g1_nc5 = self.addRouter("rbx_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0109::/64", "192.148.1.8/32"])
-        rbx_g2_nc5 = self.addRouter("rbx_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:010A::/64", "192.148.1.9/32"])
-        self.addSubnet(nodes=[rbx_g1_nc5, rbx_g2_nc5], subnets=["192.148.0.48/30"])
-        self.addSubnet(nodes=[rbx_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.0.52/30"])
-        self.addSubnet(nodes=[rbx_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.0.56/30"])
-        self.addSubnet(nodes=[rbx_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.60/30"])
-        self.addSubnet(nodes=[rbx_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.64/30"])
+        rbx_g2_nc5 = self.addRouter("rbx_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:010A::/64", "192.148.1.9/32"])    
+        self.addSubnet(nodes=[rbx_g1_nc5, rbx_g2_nc5], subnets=["192.148.0.48/30","2001:41D0:0:48::/64"])
+        self.addSubnet(nodes=[rbx_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.0.52/30","2001:41D0:0:52::/64"])
+        self.addSubnet(nodes=[rbx_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.0.56/30","2001:41D0:0:56::/64"])
+        self.addSubnet(nodes=[rbx_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.0.60/30","2001:41D0:0:60::/64"])
+        self.addSubnet(nodes=[rbx_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.0.64/30","2001:41D0:0:64::/64"])
 
         par_gsw_sbb1_nc5 = self.addRouter("par_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:010B::/64", "192.148.1.10/32"])
         par_th2_sbb1_nc5 = self.addRouter("par_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:010C::/64", "192.148.1.11/32"])
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5], subnets=["192.148.0.68/30"])
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5, rbx_g2_nc5], subnets=["192.148.0.72/30"])
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5, gra_g1_nc5], subnets=["192.148.0.76/30"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5, gra_g2_nc5], subnets=["192.148.0.80/30"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5, rbx_g1_nc5], subnets=["192.148.0.84/30"])
+        self.addSubnet(nodes=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5], subnets=["192.148.0.68/30","2001:41D0:0:68::/64"])
+        self.addSubnet(nodes=[par_gsw_sbb1_nc5, rbx_g2_nc5], subnets=["192.148.0.72/30","2001:41D0:0:72::/64"])
+        self.addSubnet(nodes=[par_gsw_sbb1_nc5, gra_g1_nc5], subnets=["192.148.0.76/30","2001:41D0:0:76::/64"])
+        self.addSubnet(nodes=[par_th2_sbb1_nc5, gra_g2_nc5], subnets=["192.148.0.80/30","2001:41D0:0:80::/64"])
+        self.addSubnet(nodes=[par_th2_sbb1_nc5, rbx_g1_nc5], subnets=["192.148.0.84/30","2001:41D0:0:84::/64"])
 
         routers = [lon_thw_sbb1_nc5,lon_drch_sbb1_nc5,
                 gra_g1_nc5, gra_g2_nc5,
@@ -154,7 +154,10 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
 
-        setup_routers(routers)
+        for r in routers:
+            r.addDaemon(OSPF)
+            r.addDaemon(OSPF6)
+            r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
 
         # adding BGP and OSPF as IGP
 
@@ -163,7 +166,7 @@ class MyTopology(IPTopo):
                 fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5,fra_1_n7,fra_5_n7,
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
-
+	
         set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])
         set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])
         set_rr(self, rr=gra_g1_nc5, peers=[gra_g2_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
@@ -173,63 +176,6 @@ class MyTopology(IPTopo):
 
         #self.addiBGPFullMesh(1, routers=routers)
         self.addAS(16276, routers=routers)
-
-
-        # adding external AS <=> an AS contain one router
-
-        google=self.addRouter("google",config=RouterConfig,lo_addresses=["2001:4860::/32","8.8.4.0/24"])
-        self.addAS(15169,routers=[google])
-        self.addLinks((par_gsw_sbb1_nc5,google),(fra_5_n7,google),(par_th2_sbb1_nc5,google))
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,google], subnets=["192.148.0.88/30", "8.8.5.0/24"])
-        self.addSubnet(nodes=[fra_5_n7,google], subnets=["192.148.0.92/30", "8.8.6.0/24"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,google], subnets=["192.148.0.96/30", "8.8.7.0/24"])
-        ebgp_session(self,par_gsw_sbb1_nc5,google,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,fra_5_n7,google,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,par_th2_sbb1_nc5,google,link_type=CLIENT_PROVIDER)
-
-        vodafone=self.addRouter("vodafone",config=RouterConfig,lo_addresses=["2001:5000::/21","2.16.35.0/24"])
-        self.addAS(1273,routers=[vodafone])
-        self.addLinks((par_th2_sbb1_nc5,vodafone),(fra_5_n7,vodafone),(fra_1_n7,vodafone),(par_gsw_sbb1_nc5,vodafone))
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,vodafone], subnets=["192.148.0.100/30", "2.16.36.0/24"])
-        self.addSubnet(nodes=[fra_5_n7,vodafone], subnets=["192.148.0.104/30", "2.16.37.0/24"])
-        self.addSubnet(nodes=[fra_1_n7,vodafone], subnets=["192.148.0.108/30", "2.16.38.0/24"])
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,vodafone], subnets=["192.148.0.112/30", "2.16.39.0/24"])
-        ebgp_session(self,par_th2_sbb1_nc5,vodafone,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,fra_5_n7,vodafone,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,fra_1_n7,vodafone,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,par_gsw_sbb1_nc5,vodafone,link_type=CLIENT_PROVIDER)
-
-        cogent=self.addRouter("cogent",config=RouterConfig,lo_addresses=["2001:550::/32","2.58.4.0/22"])
-        self.addAS(174,routers=[cogent])
-        self.addLinks((par_gsw_sbb1_nc5,cogent),(lon_thw_sbb1_nc5,cogent),(par_th2_sbb1_nc5,cogent))
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,cogent], subnets=["192.148.0.116/30", "2.58.8.0/22"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5,cogent], subnets=["192.148.0.120/30", "2.58.12.0/22"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,cogent], subnets=["192.148.0.124/30", "2.58.16.0/22"])
-        ebgp_session(self,par_gsw_sbb1_nc5,cogent,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,lon_thw_sbb1_nc5,cogent,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,par_th2_sbb1_nc5,cogent,link_type=CLIENT_PROVIDER)
-
-
-        telia=self.addRouter("telia",config=RouterConfig,lo_addresses=["2001:2000::/20","2.255.248.0/21"])
-        self.addAS(1299,routers=[telia])
-        self.addLinks((fra_5_n7,telia),(fra_1_n7,telia),(lon_thw_sbb1_nc5,telia))
-        self.addSubnet(nodes=[fra_5_n7,telia], subnets=["192.148.0.128/30", "2.255.240.0/21"])
-        self.addSubnet(nodes=[fra_1_n7,telia], subnets=["192.148.0.132/30", "2.254.224.0/21"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5,telia], subnets=["192.148.0.136/30", "2.254.232.0/21"])
-        ebgp_session(self,fra_5_n7,telia,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,fra_1_n7,telia,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,lon_thw_sbb1_nc5,telia,link_type=CLIENT_PROVIDER)
-
-        amazon=self.addRouter("amazon",config=RouterConfig,lo_addresses=["2001:4f8:b::/48","3.5.128.0/24"])
-        self.addAS(16509,routers=[amazon])
-        self.addLinks((lon_thw_sbb1_nc5,amazon),(par_th2_sbb1_nc5,amazon))
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,amazon], subnets=["192.140.0.140/30", "3.5.129.0/24"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,amazon], subnets=["192.144.0.140/30", "3.5.130.4/30"])
-        ebgp_session(self,par_th2_sbb1_nc5,amazon,link_type=CLIENT_PROVIDER)
-        ebgp_session(self,par_th2_sbb1_nc5,amazon,link_type=CLIENT_PROVIDER)
-
-        #self.addSubnet(nodes=[google_r1, par_gsw_sbb1_nc5], subnets=["192.148.0.88/30"])
-        setup_routers([google,vodafone,cogent,telia,amazon])
 
         # adding BGP to establish iBGP sessions
         #as1_rr1.addDaemon(BGP, address_families=(AF_INET6(networks=(lan_as1_h1,),),))
@@ -251,36 +197,36 @@ class MyTopology(IPTopo):
         # adding a BGP daemon for AS2 routers
         #as2_cl1.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),))
         #as2_cl2.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),))
-
+        
         # AS3
         #lan_as3_h3 = '7ac0:d0d0:15:dead::/64'
-
+        
         #as3_r1 = self.addRouter("as3_r1", config=RouterConfig)
         #as3_r2 = self.addRouter("as3_r2", config=RouterConfig)
         #as3_r3 = self.addRouter("as3_r3", config=RouterConfig)
         #as3_r4 = self.addRouter("as3_r4", config=RouterConfig)
-
+        
         #as3_r1.addDaemon(OSPF6)
         #as3_r2.addDaemon(OSPF6)
         #as3_r3.addDaemon(OSPF6)
         #as3_r4.addDaemon(OSPF6)
-
+        
         #as3_r1.addDaemon(BGP, address_families=(family,))
         #as3_r2.addDaemon(BGP, address_families=(family,))
         #as3_r3.addDaemon(BGP, address_families=(family,))
         #as3_r4.addDaemon(BGP, address_families=(family,))
-
+        
         #self.addAS(3, (as3_r1, as3_r2, as3_r3, as3_r4))
-
+        
         #iBGPFullMesh(3, routers=(as3_r1,as3_r2,as3_r3,as3_r4))
-
+        
         #as3_h3 = self.addHost("as3_h3")
-
+        
         #self.addLinks((as3_r1, as3_r2), (as3_r1, as3_r4),
                       #(as3_r2, as3_r3),
                       #(as3_r3, as3_r4), (as3_r3, as1_s1),
                       #(as3_h3, as3_r2))
-
+        
         #self.addSubnet((as3_h3, as3_r2), subnets=(lan_as3_h3,))
         #ebgp_session(self, as3_r3, as1_s1, link_type=SHARE)
 
@@ -296,10 +242,10 @@ class MyTopology(IPTopo):
 
         # adding links between the routers (and hosts)
         # self.addLink(as1_rr1, as1_rr2, igp_metric=5)
-        self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
+        self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5), 
                       (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
                       (gra_g1_nc5, gra_g2_nc5), (gra_g1_nc5, par_gsw_sbb1_nc5), (gra_g1_nc5, fra_fr5_sbb1_nc5),
-                      (gra_g2_nc5, par_th2_sbb1_nc5), (gra_g2_nc5, fra_fr5_sbb2_nc5),
+                      (gra_g2_nc5, par_th2_sbb1_nc5), (gra_g2_nc5, fra_fr5_sbb2_nc5), 
                       (fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5), (fra_fr5_sbb1_nc5, fra_1_n7), (fra_fr5_sbb1_nc5, fra_5_n7), (fra_fr5_sbb1_nc5, rbx_g1_nc5),
                       (fra_fr5_sbb2_nc5, fra_1_n7), (fra_fr5_sbb2_nc5, fra_5_n7), (fra_fr5_sbb2_nc5, rbx_g2_nc5),
                       (fra_1_n7, fra_5_n7),
@@ -318,16 +264,10 @@ class MyTopology(IPTopo):
 
         super().build(*args, **kwargs)
 
-def setup_routers(routers):
-    for r in routers:
-        r.addDaemon(OSPF)
-        r.addDaemon(OSPF6)
-        r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
-
 
 # Press the green button to run the script.
 if __name__ == '__main__':
-    net = IPNet(topo=MyTopology(), allocate_IPs=False)
+    net = IPNet(topo=MyTopology())#, allocate_IPs=False)
     try:
         net.start()
         IPCLI(net)
