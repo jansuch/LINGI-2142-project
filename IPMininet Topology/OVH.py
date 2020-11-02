@@ -163,13 +163,21 @@ class MyTopology(IPTopo):
                 fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5,fra_1_n7,fra_5_n7,
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
+                
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.1.32/32"])
+        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.1.32/32"])
+        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.1.32/32"])
+        setup_routers([MyServer1, MyServer2, MyServer3])
+        self.addLinks((MyServer1, rbx_g1_nc5),
+        	       (MyServer2, lon_drch_sbb1_nc5),
+        	       (MyServer3, fra_fr5_sbb2_nc5))
 
-        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])
-        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])
+        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])#, MyServer2])
+        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])#, MyServer1])
         set_rr(self, rr=gra_g1_nc5, peers=[gra_g2_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=gra_g2_nc5, peers=[gra_g1_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=fra_fr5_sbb1_nc5, peers=[fra_1_n7, fra_5_n7])
-        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7])
+        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7])#, MyServer3])
 
         #self.addiBGPFullMesh(1, routers=routers)
         self.addAS(16276, routers=routers)
@@ -325,6 +333,7 @@ class MyTopology(IPTopo):
 
         # adding links between the routers (and hosts)
         # self.addLink(as1_rr1, as1_rr2, igp_metric=5)
+        
         self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
                       (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
                       (gra_g1_nc5, gra_g2_nc5), (gra_g1_nc5, par_gsw_sbb1_nc5), (gra_g1_nc5, fra_fr5_sbb1_nc5),
@@ -335,11 +344,7 @@ class MyTopology(IPTopo):
                       (rbx_g1_nc5, rbx_g2_nc5), (rbx_g1_nc5, par_th2_sbb1_nc5),
                       (rbx_g2_nc5, par_gsw_sbb1_nc5),
                       (par_gsw_sbb1_nc5, par_th2_sbb1_nc5))
-
-        # adding a subnet between hosts and routers
-        #self.addSubnet((as1_s2, as1_h1), subnets=(lan_as1_h1,))
-        #self.addSubnet((as2_cl1, as2_h2), subnets=(lan_as2_h2,))
-        #self.addSubnet((as2_cl2, as2_h2), subnets=(lan_as2_h2,))
+        
 
         # adding eBGP sessions between the two ASes
         #ebgp_session(self, as2_cl1, as1_rr1, link_type=SHARE)
