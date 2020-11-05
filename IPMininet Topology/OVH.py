@@ -107,6 +107,15 @@ class MyTopology(IPTopo):
     #    OSPFv3 and BGP. Add also a new host as3_h3 in a new lan 7ac0:d0d0:15:dead::/64 in one of the 4 routers.
     #    h1, h2 and h3 must reach each other. The iBGP sessions, this time, must be in
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
+    
+    curr_routerid=0
+    
+    def setup_routers(self, routers):
+        for r in routers:
+            r.addDaemon(OSPF, routerid=self.curr_routerid)
+            self.curr_routerid+=1
+            r.addDaemon(OSPF6)
+            r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
 
     def build(self, *args, **kwargs):
 
@@ -155,7 +164,7 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
 
-        setup_routers(routers)
+        self.setup_routers(routers)
 
 
         # adding BGP and OSPF as IGP
@@ -166,28 +175,30 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
                 
-        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.13/32", "192.148.1.0/32"])
-        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.14/32", "192.148.1.0/32"])
-        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.15/32", "192.148.1.0/32"])
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32"])#,"192.148.3.13/32"])
+        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C1::/128", "192.148.1.0/32"])#,"192.148.3.14/32"])
+        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C2::/128", "192.148.1.0/32"])#,"192.148.3.15/32"])
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
         self.addSubnet(nodes=[MyServer2, lon_drch_sbb1_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
         self.addSubnet(nodes=[MyServer3, fra_fr5_sbb2_nc5], subnets=["192.148.0.8/30","2001:41D0:0:0009::/64"])
-        for r in [MyServer1, MyServer2, MyServer3]:
-        	r.addDaemon(OSPF)
-        	r.addDaemon(OSPF6)
+        servers = [MyServer1, MyServer2, MyServer3]
+        #for r in servers:
+        #	r.addDaemon(OSPF)
+        #	r.addDaemon(OSPF6)
+        self.setup_routers(servers)
         self.addLinks((MyServer1, rbx_g1_nc5),
                       (MyServer2, lon_drch_sbb1_nc5),
                       (MyServer3, fra_fr5_sbb2_nc5))
 
-        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])#, MyServer2])
-        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5])#, MyServer1])
+        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer2])
+        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer1])
         set_rr(self, rr=gra_g1_nc5, peers=[gra_g2_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=gra_g2_nc5, peers=[gra_g1_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=fra_fr5_sbb1_nc5, peers=[fra_1_n7, fra_5_n7])
-        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7])#, MyServer3])
+        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7, MyServer3])
 
-        #self.addiBGPFullMesh(1, routers=routers)
-        self.addAS(16276, routers=routers)
+        #self.addiBGPFullMesh(1, routers=routers+servers)
+        self.addAS(16276, routers=routers+servers)
 
 
         '''********************   ADDING EXTERNAL AS     **********************************'''
@@ -206,7 +217,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_5_n7,google_r3)
         ebgp_session(self,par_th2_sbb1_nc5,google_r2)
 
-        setup_routers([google_r1,google_r2,google_r3])
+        self.setup_routers([google_r1,google_r2,google_r3])
 
 
         vodafone_r1=self.addRouter("voda_r1",config=RouterConfig,lo_addresses=["2001:5000:0:1::/64","2.16.35.1/32"])
@@ -226,7 +237,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_1_n7,vodafone_r3 )
         ebgp_session(self,par_gsw_sbb1_nc5,vodafone_r1 )
 
-        setup_routers([vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
+        self.setup_routers([vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
 
 
 
@@ -243,7 +254,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,lon_thw_sbb1_nc5,cogent_r3 )
         ebgp_session(self,par_th2_sbb1_nc5,cogent_r2 )
 
-        setup_routers([cogent_r1,cogent_r2,cogent_r3])
+        self.setup_routers([cogent_r1,cogent_r2,cogent_r3])
 
 
         telia_r1=self.addRouter("telia_r1",config=RouterConfig,lo_addresses=["2001:2000:0:1::/64","2.255.248.1/32"])
@@ -260,7 +271,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_1_n7,telia_r1 )
         ebgp_session(self,lon_thw_sbb1_nc5,telia_r3 )
 
-        setup_routers([telia_r1,telia_r2,telia_r3])
+        self.setup_routers([telia_r1,telia_r2,telia_r3])
 
 
         amazon_r1=self.addRouter("amazon_r1",config=RouterConfig,lo_addresses=["2001:4f8:b:0:1::/64","3.5.128.1/32"])
@@ -273,10 +284,11 @@ class MyTopology(IPTopo):
         ebgp_session(self,par_th2_sbb1_nc5,amazon_r1 )
         ebgp_session(self,lon_thw_sbb1_nc5,amazon_r2 )
 
-        setup_routers([amazon_r1,amazon_r2])#,vodafone,cogent,telia,amazon])
+        self.setup_routers([amazon_r1,amazon_r2])#,vodafone,cogent,telia,amazon])
 
         '''********************   communities     **********************************'''
         '''********************   NOT ANNOUNCED TO     **********************************'''
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2)
@@ -296,15 +308,19 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2)
+        '''
 
         '''********************   Learn from     **********************************'''
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r3,telia_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2])
+        '''
 
         '''********************   ROUTE POLICIES     **********************************'''
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[telia_r3],matching=[CommunityList(community='16276:2010')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r3],matching=[CommunityList(community='16276:2020')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r2],matching=[CommunityList(community='16276:2050')])
@@ -324,6 +340,7 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r2],matching=[CommunityList(community='16276:2020')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
+        '''
 
         # adding BGP to establish iBGP sessions
         #as1_rr1.addDaemon(BGP, address_families=(AF_INET6(networks=(lan_as1_h1,),),))
@@ -406,14 +423,11 @@ class MyTopology(IPTopo):
         # adding eBGP sessions between the two ASes
         #ebgp_session(self, as2_cl1, as1_rr1, link_type=SHARE)
         #ebgp_session(self, as2_cl2, as1_rr2, link_type=SHARE)
+        
 
         super().build(*args, **kwargs)
 
-def setup_routers(routers):
-    for r in routers:
-        r.addDaemon(OSPF)
-        r.addDaemon(OSPF6)
-        r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+
 # Press the green button to run the script.
 if __name__ == '__main__':
     net = IPNet(topo=MyTopology(), allocate_IPs=True)
