@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-
+import ipaddress
 from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
 from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF
 from ipmininet.router.config.zebra import RouteMap
-from ipmininet.router.config.zebra import RouteMap, CommunityList
+from ipmininet.router.config.zebra import RouteMap, CommunityList, AccessList, AccessListEntry
 
 class MyTopology(IPTopo):
     """
@@ -109,6 +109,9 @@ class MyTopology(IPTopo):
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
 
     def build(self, *args, **kwargs):
+        LOCAL_PREF_HIGH=['16276:7200',200]
+        LOCAL_PREF_LOW=['16276:7100',50]
+        LOCAL_PREFS=[LOCAL_PREF_LOW,LOCAL_PREF_HIGH]
 
         lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0281::/128", "192.148.3.1/32"])
@@ -165,7 +168,7 @@ class MyTopology(IPTopo):
                 fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5,fra_1_n7,fra_5_n7,
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
-                
+
         MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.13/32", "192.148.1.0/32"])
         MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.14/32", "192.148.1.0/32"])
         MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128","192.148.3.15/32", "192.148.1.0/32"])
@@ -285,7 +288,7 @@ class MyTopology(IPTopo):
         fra_1_n7.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r1)
 
         fra_5_n7.get_config(BGP).set_community(community='16276:2040', from_peer=google_r3)
-        fra_5_n7.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r3)
+        fra_5_n7.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r4)
         fra_5_n7.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r2)
 
         par_gsw_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r1)
@@ -325,72 +328,27 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
 
-        # adding BGP to establish iBGP sessions
-        #as1_rr1.addDaemon(BGP, address_families=(AF_INET6(networks=(lan_as1_h1,),),))
-        #as1_rr2.addDaemon(BGP, address_families=(AF_INET6(networks=(lan_as1_h1,),),))
-        #as1_s1.addDaemon(BGP, address_families=(family,))
-        #as1_s2.addDaemon(BGP, address_families=(family,))
+        '''********************   CUSTOM LOCAL-PREF     **********************************'''
+        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
+        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
+        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
 
-        # set the ASN for routers belonging to AS1
-        # self.addAS(1, (lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5, fra_1_n7, fra_5_n7, rbx_g2_nc5, rbx_g1_nc5, par_gsw_sbb1_nc5, par_th2_sbb1_nc5,))
+        setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=vodafone_r3,ipv4='2.16.35.3/32',ipv6='2001:5000:0:3::')
+        setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=telia_r1,ipv4='2.255.248.1/32',ipv6='2001:2000:0:1::')
 
-        # configure as1_rr{1,2} as route reflectors
-        #set_rr(self, rr=as1_rr1, peers=[as1_s2, as1_rr2])
-        #set_rr(self, rr=as1_rr2, peers=[as1_s1, as1_rr1])
+        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=google_r3,ipv4='8.8.4.3/32',ipv6='2001:4860:0:3::')
+        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=vodafone_r4,ipv4='2.16.35.4/32',ipv6='2001:5000:0:4::')
+        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=telia_r2,ipv4='2.255.248.2/32',ipv6='2001:2000:0:2::')
 
-        # routers of as2
-        #as2_cl1 = self.addRouter("as2_cl1", config=RouterConfig)
-        #as2_cl2 = self.addRouter("as2_cl2", config=RouterConfig)
+        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r1,ipv4='2.58.4.1/32',ipv6='2001:550:0:1::')
+        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r1,ipv4='8.8.4.1/32',ipv6='2001:4860:0:1::')
+        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r1,ipv4='2.16.35.1/32',ipv6='2001:5000:0:1::')
 
-        # adding a BGP daemon for AS2 routers
-        #as2_cl1.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),))
-        #as2_cl2.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),))
+        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r2,ipv6='2001:4860:0:1::',ipv4='8.8.4.2/32')
+        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r2,ipv4='2.58.4.2/32',ipv6='2001:550:0:2::')
+        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r1,ipv4='3.5.128.1/32',ipv6='2001:4f8:b:0:1::')
+        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r2,ipv4='2.16.35.2/32',ipv6='2001:5000:0:2::')
 
-        # AS3
-        #lan_as3_h3 = '7ac0:d0d0:15:dead::/64'
-
-        #as3_r1 = self.addRouter("as3_r1", config=RouterConfig)
-        #as3_r2 = self.addRouter("as3_r2", config=RouterConfig)
-        #as3_r3 = self.addRouter("as3_r3", config=RouterConfig)
-        #as3_r4 = self.addRouter("as3_r4", config=RouterConfig)
-
-        #as3_r1.addDaemon(OSPF6)
-        #as3_r2.addDaemon(OSPF6)
-        #as3_r3.addDaemon(OSPF6)
-        #as3_r4.addDaemon(OSPF6)
-
-        #as3_r1.addDaemon(BGP, address_families=(family,))
-        #as3_r2.addDaemon(BGP, address_families=(family,))
-        #as3_r3.addDaemon(BGP, address_families=(family,))
-        #as3_r4.addDaemon(BGP, address_families=(family,))
-
-        #self.addAS(3, (as3_r1, as3_r2, as3_r3, as3_r4))
-
-        #iBGPFullMesh(3, routers=(as3_r1,as3_r2,as3_r3,as3_r4))
-
-        #as3_h3 = self.addHost("as3_h3")
-
-        #self.addLinks((as3_r1, as3_r2), (as3_r1, as3_r4),
-                      #(as3_r2, as3_r3),
-                      #(as3_r3, as3_r4), (as3_r3, as1_s1),
-                      #(as3_h3, as3_r2))
-
-        #self.addSubnet((as3_h3, as3_r2), subnets=(lan_as3_h3,))
-        #ebgp_session(self, as3_r3, as1_s1, link_type=SHARE)
-
-        # set the ASN for routers belonging to AS2
-        #self.addAS(2, (as2_cl1, as2_cl2))
-
-        # we add a host in as1
-        #as1_h1 = self.addHost("as1_h1")
-        # and also in as2
-        #as2_h2 = self.addHost("as2_h2")
-
-        # The goal of this network is to establish a connection between h1 and h2
-
-        # adding links between the routers (and hosts)
-        # self.addLink(as1_rr1, as1_rr2, igp_metric=5)
-        
         self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
                       (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
                       (gra_g1_nc5, gra_g2_nc5), (gra_g1_nc5, par_gsw_sbb1_nc5), (gra_g1_nc5, fra_fr5_sbb1_nc5),
@@ -401,13 +359,21 @@ class MyTopology(IPTopo):
                       (rbx_g1_nc5, rbx_g2_nc5), (rbx_g1_nc5, par_th2_sbb1_nc5),
                       (rbx_g2_nc5, par_gsw_sbb1_nc5),
                       (par_gsw_sbb1_nc5, par_th2_sbb1_nc5))
-        
 
-        # adding eBGP sessions between the two ASes
-        #ebgp_session(self, as2_cl1, as1_rr1, link_type=SHARE)
-        #ebgp_session(self, as2_cl2, as1_rr2, link_type=SHARE)
 
         super().build(*args, **kwargs)
+def setLocalPref(router,localPref,communityNbr,fromPeer,ipv4,ipv6):
+    router.get_config(BGP).set_local_pref(local_pref=localPref,
+        from_peer=fromPeer,
+        matching=[
+            CommunityList(community=communityNbr),
+            AccessList(entries=[AccessListEntry(prefix=ipaddress.IPv4Network(ipv4)),AccessListEntry(prefix=ipaddress.IPv6Network(ipv6))])
+        ])
+
+def setlocalPrefs(router,localPrefCommList,fromPeer,ipv4,ipv6):
+    for e in localPrefCommList:
+        setLocalPref(router,localPref=e[1],communityNbr=e[0],fromPeer=fromPeer,ipv4=ipv4,ipv6=ipv6)
+
 
 def setup_routers(routers):
     for r in routers:
