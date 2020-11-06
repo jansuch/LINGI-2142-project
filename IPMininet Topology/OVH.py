@@ -4,6 +4,7 @@ from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
 from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF
+from ipmininet.router.config.ospf import OSPFRedistributedRoute
 from ipmininet.router.config.zebra import RouteMap
 from ipmininet.router.config.zebra import RouteMap, CommunityList, AccessList, AccessListEntry
 
@@ -108,13 +109,13 @@ class MyTopology(IPTopo):
     #    h1, h2 and h3 must reach each other. The iBGP sessions, this time, must be in
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
     
-    curr_routerid=0
+    #curr_routerid=0
     
     def setup_routers(self, routers):
         for r in routers:
-            r.addDaemon(OSPF, routerid=self.curr_routerid)
-            self.curr_routerid+=1
-            r.addDaemon(OSPF6)
+            r.addDaemon(OSPF, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))#, routerid=self.curr_routerid)
+            #self.curr_routerid+=1
+            r.addDaemon(OSPF6, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
 
     def build(self, *args, **kwargs):
@@ -178,16 +179,17 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
                 
-        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32"])#,"192.148.3.13/32"])
-        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C1::/128", "192.148.1.0/32"])#,"192.148.3.14/32"])
-        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C2::/128", "192.148.1.0/32"])#,"192.148.3.15/32"])
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.13/32"])
+        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.14/32"])
+        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.15/32"])
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
         self.addSubnet(nodes=[MyServer2, lon_drch_sbb1_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
         self.addSubnet(nodes=[MyServer3, fra_fr5_sbb2_nc5], subnets=["192.148.0.8/30","2001:41D0:0:0009::/64"])
         servers = [MyServer1, MyServer2, MyServer3]
         #for r in servers:
-        #	r.addDaemon(OSPF)
-        #	r.addDaemon(OSPF6)
+        #    r.addDaemon(OSPF, routerid=self.curr_routerid)
+        #    self.curr_routerid+=1
+        #    r.addDaemon(OSPF6)
         self.setup_routers(servers)
         self.addLinks((MyServer1, rbx_g1_nc5),
                       (MyServer2, lon_drch_sbb1_nc5),
