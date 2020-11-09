@@ -3,7 +3,7 @@ import ipaddress
 from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
-from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF
+from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF, STATIC, StaticRoute
 from ipmininet.router.config.ospf import OSPFRedistributedRoute
 from ipmininet.router.config.zebra import RouteMap
 from ipmininet.router.config.zebra import RouteMap, CommunityList, AccessList, AccessListEntry
@@ -116,7 +116,13 @@ class MyTopology(IPTopo):
             r.addDaemon(OSPF, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))#, routerid=self.curr_routerid)
             #self.curr_routerid+=1
             r.addDaemon(OSPF6, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
-            r.addDaemon(BGP,address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+            r.addDaemon(BGP, debug=('event',),address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+    def setup_servers(self, servers):
+        for s in servers:
+            #s.addDaemon(OSPF, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
+            #s.addDaemon(OSPF6, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
+            s.addDaemon(BGP, debug=('event',),address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+    
 
     def build(self, *args, **kwargs):
         LOCAL_PREF_HIGH=['16276:7200',200]
@@ -179,28 +185,36 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
                 
-        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.13/32"])
-        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.14/32"])
-        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.15/32"])
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.12/32"])       
+        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.13/32"])
+        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.14/32"])
+        
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
-        self.addSubnet(nodes=[MyServer2, lon_drch_sbb1_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
-        self.addSubnet(nodes=[MyServer3, fra_fr5_sbb2_nc5], subnets=["192.148.0.8/30","2001:41D0:0:0009::/64"])
-        servers = [MyServer1, MyServer2, MyServer3]
-        #for r in servers:
-        #    r.addDaemon(OSPF, routerid=self.curr_routerid)
-        #    self.curr_routerid+=1
-        #    r.addDaemon(OSPF6)
-        self.setup_routers(servers)
-        self.addLinks((MyServer1, rbx_g1_nc5),
-                      (MyServer2, lon_drch_sbb1_nc5),
-                      (MyServer3, fra_fr5_sbb2_nc5))
+        MyServer1.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:0007::2"),StaticRoute("0.0.0.0/0", "192.148.3.8")])
+        #self.addSubnet(nodes=[MyServer1, rbx_g2_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
 
-        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer2])
-        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer1])
+        #self.addSubnet(nodes=[MyServer2, rbx_g1_nc5], subnets=["192.148.0.8/30","2001:41D0:0:0009::/64"])
+        self.addSubnet(nodes=[MyServer2, rbx_g2_nc5], subnets=["192.148.0.12/30","2001:41D0:0:000A::/64"])
+        MyServer2.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000A::2"),StaticRoute("0.0.0.0/0", "192.148.3.9")])
+
+        #self.addSubnet(nodes=[MyServer3, fra_fr5_sbb1_nc5], subnets=["192.148.0.16/30","2001:41D0:0:000B::/64"])
+        self.addSubnet(nodes=[MyServer3, fra_fr5_sbb2_nc5], subnets=["192.148.0.20/30","2001:41D0:0:000C::/64"])
+        MyServer3.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000C::2"),StaticRoute("0.0.0.0/0", "192.148.3.5")])
+
+        servers = [MyServer1, MyServer2, MyServer3]
+
+        self.setup_servers(servers)
+        self.addLinks((MyServer1, rbx_g1_nc5),# (MyServer1, rbx_g2_nc5),
+                      (MyServer2, rbx_g2_nc5),# (MyServer2, rbx_g1_nc5),
+                      (MyServer3, fra_fr5_sbb2_nc5))#, (MyServer3, fra_fr5_sbb1_nc5))#
+
+
+        set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer2])#, MyServer1])#
+        set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer1])#, MyServer2])#
         set_rr(self, rr=gra_g1_nc5, peers=[gra_g2_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=gra_g2_nc5, peers=[gra_g1_nc5, rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
-        set_rr(self, rr=fra_fr5_sbb1_nc5, peers=[fra_1_n7, fra_5_n7])
-        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7, MyServer3])
+        set_rr(self, rr=fra_fr5_sbb1_nc5, peers=[fra_1_n7, fra_5_n7])#, MyServer3])#
+        set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7, MyServer3])#
 
         #self.addiBGPFullMesh(1, routers=routers+servers)
         self.addAS(16276, routers=routers+servers)
@@ -293,7 +307,7 @@ class MyTopology(IPTopo):
 
         '''********************   communities     **********************************'''
         '''********************   NOT ANNOUNCED TO     **********************************'''
-        
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2)
@@ -313,19 +327,19 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2)
-        
+        '''
 
         '''********************   Learn from     **********************************'''
-        
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r3,telia_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2])
-        
+        '''
 
         '''********************   ROUTE POLICIES     **********************************'''
-        
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[telia_r3],matching=[CommunityList(community='16276:2010')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r3],matching=[CommunityList(community='16276:2020')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r2],matching=[CommunityList(community='16276:2050')])
@@ -345,9 +359,10 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r2],matching=[CommunityList(community='16276:2020')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
-        
+        '''
 
         '''********************   CUSTOM LOCAL-PREF     **********************************'''
+        '''
         setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
         setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
         setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
@@ -367,6 +382,7 @@ class MyTopology(IPTopo):
         setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r2,ipv4='2.58.4.2/32',ipv6='2001:550:0:2::')
         setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r1,ipv4='3.5.128.1/32',ipv6='2001:4f8:b:0:1::')
         setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r2,ipv4='2.16.35.2/32',ipv6='2001:5000:0:2::')
+        '''
 
         self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
                       (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
