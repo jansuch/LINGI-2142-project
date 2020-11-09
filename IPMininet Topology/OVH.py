@@ -127,7 +127,7 @@ class MyTopology(IPTopo):
     def build(self, *args, **kwargs):
         LOCAL_PREF_HIGH=['16276:7200',200]
         LOCAL_PREF_LOW=['16276:7100',50]
-        LOCAL_PREFS=[LOCAL_PREF_LOW,LOCAL_PREF_HIGH]
+        LOCAL_PREFS=[LOCAL_PREF_HIGH,LOCAL_PREF_LOW]
 
         lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0281::/128", "192.148.3.1/32"])
@@ -225,8 +225,12 @@ class MyTopology(IPTopo):
         google_r1=self.addRouter("google_r1",config=RouterConfig,lo_addresses=["2001:4860:0:1::/64","8.8.4.1/32"])
         google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/64","8.8.4.2/32"])
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/64","8.8.4.3/32"])
-        self.addAS(15169,routers=[google_r1,google_r2,google_r3])
-        self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))
+
+        self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2),
+                        (google_r1,google_r2),(google_r1,google_r3),(google_r3,google_r2))
+
+        self.addiBGPFullMesh(15169, routers=[google_r1,google_r2,google_r3])
+        #self.addAS(15169,routers=[google_r1,google_r2,google_r3])
 
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
         self.addSubnet(nodes=[fra_5_n7,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
@@ -244,8 +248,11 @@ class MyTopology(IPTopo):
         vodafone_r3=self.addRouter("voda_r3",config=RouterConfig,lo_addresses=["2001:5000:0:3::/64","2.16.35.3/32"])
         vodafone_r4=self.addRouter("voda_r4",config=RouterConfig,lo_addresses=["2001:5000:0:4::/64","2.16.35.4/32"])
 
-        self.addAS(1273,routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
-        self.addLinks((par_th2_sbb1_nc5,vodafone_r2),(fra_5_n7,vodafone_r4),(fra_1_n7,vodafone_r3),(par_gsw_sbb1_nc5,vodafone_r1))
+        #self.addAS(1273,routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
+        self.addLinks((par_th2_sbb1_nc5,vodafone_r2),(fra_5_n7,vodafone_r4),(fra_1_n7,vodafone_r3),(par_gsw_sbb1_nc5,vodafone_r1),
+                        (vodafone_r1,vodafone_r2),(vodafone_r2,vodafone_r3),(vodafone_r3,vodafone_r4),(vodafone_r4,vodafone_r1),
+                        (vodafone_r2,vodafone_r4))
+        self.addiBGPFullMesh(1273,routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
 
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,vodafone_r1], subnets=["192.148.2.112/30", "2001:41D0:0:1F0E::/64"])
         self.addSubnet(nodes=[fra_1_n7,vodafone_r3], subnets=["192.148.2.108/30", "2001:41D0:0:1F0D::/64"])
@@ -263,8 +270,11 @@ class MyTopology(IPTopo):
         cogent_r1=self.addRouter("cogent_r1",config=RouterConfig,lo_addresses=["2001:550:0:1::/64","2.58.4.1/32"])
         cogent_r2=self.addRouter("cogent_r2",config=RouterConfig,lo_addresses=["2001:550:0:2::/64","2.58.4.2/32"])
         cogent_r3=self.addRouter("cogent_r3",config=RouterConfig,lo_addresses=["2001:550:0:3::/64","2.58.4.3/32"])
-        self.addAS(174,routers=[cogent_r1,cogent_r2,cogent_r3])
-        self.addLinks((par_gsw_sbb1_nc5,cogent_r1),(lon_thw_sbb1_nc5,cogent_r3),(par_th2_sbb1_nc5,cogent_r2))
+        #self.addAS(174,routers=[cogent_r1,cogent_r2,cogent_r3])
+        self.addLinks((par_gsw_sbb1_nc5,cogent_r1),(lon_thw_sbb1_nc5,cogent_r3),(par_th2_sbb1_nc5,cogent_r2),
+                        (cogent_r1,cogent_r2),(cogent_r2,cogent_r3),(cogent_r3,cogent_r1))
+
+        self.addiBGPFullMesh(174,routers=[cogent_r1,cogent_r2,cogent_r3])
 
         self.addSubnet(nodes=[par_th2_sbb1_nc5,cogent_r2], subnets=["192.148.2.124/30", "2001:41D0:0:1F11::/64"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5,cogent_r3], subnets=["192.148.2.120/30", "2001:41D0:0:1F10::/64"])
@@ -280,8 +290,11 @@ class MyTopology(IPTopo):
         telia_r2=self.addRouter("telia_r2",config=RouterConfig,lo_addresses=["2001:2000:0:2::/64","2.255.248.2/32"])
         telia_r3=self.addRouter("telia_r3",config=RouterConfig,lo_addresses=["2001:2000:0:3::/64","2.255.248.3/32"])
 
-        self.addAS(1299,routers=[telia_r1,telia_r2,telia_r3])
-        self.addLinks((fra_5_n7,telia_r2),(fra_1_n7,telia_r1),(lon_thw_sbb1_nc5,telia_r3))
+        #self.addAS(1299,routers=[telia_r1,telia_r2,telia_r3])
+        self.addLinks((fra_5_n7,telia_r2),(fra_1_n7,telia_r1),(lon_thw_sbb1_nc5,telia_r3),
+                        (telia_r1,telia_r2),(telia_r2,telia_r3),(telia_r3,telia_r1))
+
+        self.addiBGPFullMesh(1299,routers=[telia_r1,telia_r2,telia_r3])
 
         self.addSubnet(nodes=[fra_5_n7,telia_r2], subnets=["192.148.2.128/30", "2001:41D0:0:1F12::/64"])
         self.addSubnet(nodes=[fra_1_n7,telia_r1], subnets=["192.148.2.132/30", "2001:41D0:0:1F13::/64"])
@@ -295,8 +308,12 @@ class MyTopology(IPTopo):
 
         amazon_r1=self.addRouter("amazon_r1",config=RouterConfig,lo_addresses=["2001:4f8:b:0:1::/64","3.5.128.1/32"])
         amazon_r2=self.addRouter("amazon_r2",config=RouterConfig,lo_addresses=["2001:4f8:b:0:2::/64","3.5.128.2/32"])
-        self.addAS(16509,routers=[amazon_r1,amazon_r2])
-        self.addLinks((lon_thw_sbb1_nc5,amazon_r2),(par_th2_sbb1_nc5,amazon_r1))
+        #self.addAS(16509,routers=[amazon_r1,amazon_r2])
+        self.addLinks((lon_thw_sbb1_nc5,amazon_r2),(par_th2_sbb1_nc5,amazon_r1),
+                        (amazon_r1,amazon_r2))
+
+        self.addiBGPFullMesh(16509,routers=[amazon_r1,amazon_r2])
+
 
         self.addSubnet(nodes=[par_th2_sbb1_nc5,amazon_r1], subnets=["192.148.2.140/30", "2001:41D0:0:1F15::/64"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5,amazon_r2], subnets=["192.148.2.144/30", "2001:41D0:0:1F16::/64"])
@@ -306,8 +323,9 @@ class MyTopology(IPTopo):
         self.setup_routers([amazon_r1,amazon_r2])#,vodafone,cogent,telia,amazon])
 
         '''********************   communities     **********************************'''
+        #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
-        '''
+
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3)
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2)
@@ -327,19 +345,19 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1)
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2)
-        '''
+
 
         '''********************   Learn from     **********************************'''
-        '''
+
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r3,telia_r2])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1])
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2])
-        '''
+
 
         '''********************   ROUTE POLICIES     **********************************'''
-        '''
+
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[telia_r3],matching=[CommunityList(community='16276:2010')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r3],matching=[CommunityList(community='16276:2020')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r2],matching=[CommunityList(community='16276:2050')])
@@ -359,7 +377,7 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r2],matching=[CommunityList(community='16276:2020')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
-        '''
+
 
         '''********************   CUSTOM LOCAL-PREF     **********************************'''
         '''
@@ -367,16 +385,16 @@ class MyTopology(IPTopo):
         setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
         setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
 
-        setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=vodafone_r3,ipv4='2.16.35.3/32',ipv6='2001:5000:0:3::')
-        setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=telia_r1,ipv4='2.255.248.1/32',ipv6='2001:2000:0:1::')
+        #setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=vodafone_r3,ipv4='2.16.35.3/32',ipv6='2001:5000:0:3::')
+        #setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=telia_r1,ipv4='2.255.248.1/32',ipv6='2001:2000:0:1::')
 
-        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=google_r3,ipv4='8.8.4.3/32',ipv6='2001:4860:0:3::')
-        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=vodafone_r4,ipv4='2.16.35.4/32',ipv6='2001:5000:0:4::')
-        setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=telia_r2,ipv4='2.255.248.2/32',ipv6='2001:2000:0:2::')
+        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=google_r3,ipv4='8.8.4.3/32',ipv6='2001:4860:0:3::')
+        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=vodafone_r4,ipv4='2.16.35.4/32',ipv6='2001:5000:0:4::')
+        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=telia_r2,ipv4='2.255.248.2/32',ipv6='2001:2000:0:2::')
 
-        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r1,ipv4='2.58.4.1/32',ipv6='2001:550:0:1::')
-        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r1,ipv4='8.8.4.1/32',ipv6='2001:4860:0:1::')
-        setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r1,ipv4='2.16.35.1/32',ipv6='2001:5000:0:1::')
+        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r1,ipv4='2.58.4.1/32',ipv6='2001:550:0:1::/64')
+        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r1,ipv4='8.8.4.1/32',ipv6='2001:4860:0:1::/64')
+        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r1,ipv4='2.16.35.1/32',ipv6='2001:5000:0:1::/64')
 
         setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r2,ipv6='2001:4860:0:1::',ipv4='8.8.4.2/32')
         setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r2,ipv4='2.58.4.2/32',ipv6='2001:550:0:2::')
