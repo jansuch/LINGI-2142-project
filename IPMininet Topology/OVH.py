@@ -255,16 +255,7 @@ class MyTopology(IPTopo):
 
         google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/64","8.8.4.2/32"])
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/64","8.8.4.3/32"])
-
-        e=self.addLink(par_gsw_sbb1_nc5,google_r1)
-        #e[google_r1].addParams(ra=[AdvPrefix("2001:4860:1:1::/64",valid_lifetime=86400,preferred_lifetime=14400)])
-        self.addLinks((fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))
-        #self.addLink(google_r1,google_r2,igp_cost=2000)
-        #self.addLink(google_r1,google_r3,igp_cost=2000)
-        #self.addLink(google_r3,google_r2,igp_cost=2000)
-
-        #self.addiBGPFullMesh(15169, routers=[google_r1,google_r2,google_r3])
-        self.addAS(15169,routers=[google_r1,google_r2,google_r3])
+        self.addAS(15169,routers=[google_r1,google_r2,google_r3,google_int])
         self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
 
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
@@ -363,7 +354,7 @@ class MyTopology(IPTopo):
         '''********************   communities     **********************************'''
         #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
-
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3, matching=(all_al,))
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3, matching=(all_al,))
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2, matching=(all_al,))
@@ -384,18 +375,17 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1, matching=(all_al,))
         par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2, matching=(all_al,))
 
-
+        '''
         '''********************   Learn from     **********************************'''
-
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2],matching=(all_al,))
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1],matching=(all_al,))
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r3,telia_r2],matching=(all_al,))
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1],matching=(all_al,))
         fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2],matching=(all_al,))
-
-
+        '''
         '''********************   ROUTE POLICIES     **********************************'''
-
+        '''
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[telia_r3],matching=[CommunityList(community='16276:2010')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r3],matching=[CommunityList(community='16276:2020')])
         lon_thw_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r2],matching=[CommunityList(community='16276:2050')])
@@ -415,8 +405,7 @@ class MyTopology(IPTopo):
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r2],matching=[CommunityList(community='16276:2020')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
         par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
-
-
+        '''
         '''********************   CUSTOM LOCAL-PREF     **********************************'''
         '''______________: this part was not implemented because of routemap issues, for more information see the report.'''
         '''
