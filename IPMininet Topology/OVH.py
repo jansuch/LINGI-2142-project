@@ -233,29 +233,41 @@ class MyTopology(IPTopo):
 
         '''********************   ADDING EXTERNAL AS     **********************************'''
 
-        google_r1=self.addRouter("google_r1",config=RouterConfig,lo_addresses=["2001:4860:0:1::/64","8.8.4.1/32"])
-        google_int=self.addRouter("google_int",config=RouterConfig,lo_addresses=["2001:4860:0:4::/64","8.8.4.4/32"])
+        '''********************   Google AS     **********************************'''
+        google_r1=self.addRouter("google_r1",config=RouterConfig,lo_addresses=["2001:4860:0:1::/128","8.8.5.1/32"])
+        google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/128","8.8.5.2/32"])
+        google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/128","8.8.5.3/32"])
+        google_border_routers = [google_r1, google_r2, google_r3]
+        
+        google_int=self.addRouter("google_int",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
         google_h1=self.addHost("google_h1")
         
         google_r1int = self.addLink(google_int, google_r1)
-        self.addSubnet(nodes=[google_r1, google_int], subnets=["2001:4860:0:1::/64","8.8.1.0/24"])
-        #google_r1int[google_r1].addParams(ip=("2001:4860:1:1::/48", "8.8.5.1/32"))
-        #google_r1int[google_int].addParams(ip=("2001:4860:1:4::/48", "8.8.5.4/32"))
-          
+        google_r2int = self.addLink(google_int, google_r2)
+        google_r3int = self.addLink(google_int, google_r3)
         google_h1int = self.addLink(google_h1, google_int)
-        self.addSubnet(nodes=[google_int, google_h1], subnets=["2001:4860:0:2::/64","8.8.2.0/24"])
+        #self.addLinks(
+        #	(google_int, google_r1),
+        #	(google_int, google_r2),
+        #	(google_int, google_r3),
+        #	(google_int, google_h1)
+        #)
+        
+        self.addSubnet(nodes=[google_r1, google_int], subnets=["2001:4860:1:1::/64","8.8.1.0/24"])
+        self.addSubnet(nodes=[google_r2, google_int], subnets=["2001:4860:1:2::/64","8.8.2.0/24"])
+        self.addSubnet(nodes=[google_r3, google_int], subnets=["2001:4860:1:3::/64","8.8.3.0/24"])
+        self.addSubnet(nodes=[google_int, google_h1], subnets=["2001:4860:1:4::/64","8.8.4.0/24"])
+        
         #self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860::/48","8.8.0.0/16"])
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
         #link_google_h1[google_r1].addParams(ip=("2001:4860:1:1::/64", "8.8.5.1/32"))
         
-        google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860::/48", "2001:4860:0:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
-        self.addiBGPFullMesh(15169, routers=[google_r1, google_int])
+        google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
+        google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.2.2")])
+        google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.3.2")])
+        self.addiBGPFullMesh(15169, routers=google_border_routers + [google_int])
         
-        self.setup_internal_routers([google_int])
-
-        google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/64","8.8.4.2/32"])
-        google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/64","8.8.4.3/32"])
-        self.addAS(15169,routers=[google_r1,google_r2,google_r3,google_int])
+        self.addAS(15169,routers=google_border_routers + [google_int])
         self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
 
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
@@ -266,8 +278,10 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_5_n7,google_r3)
         ebgp_session(self,par_th2_sbb1_nc5,google_r2)
 
-        self.setup_border_routers([google_r1,google_r2,google_r3])
+        self.setup_internal_routers([google_int])
+        self.setup_border_routers(google_border_routers)
 
+        '''********************************************************************************'''
 
         vodafone_r1=self.addRouter("voda_r1",config=RouterConfig,lo_addresses=["2001:5000:0:1::/64","2.16.35.1/32"])
         vodafone_r2=self.addRouter("voda_r2",config=RouterConfig,lo_addresses=["2001:5000:0:2::/64","2.16.35.2/32"])
