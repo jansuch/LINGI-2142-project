@@ -3,7 +3,7 @@ import ipaddress
 from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
-from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF, STATIC, StaticRoute
+from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF, STATIC, StaticRoute, Rule, TransitFilter, Deny, Allow, IPTables, IP6Tables
 from ipmininet.router.config.ospf import OSPFRedistributedRoute
 from ipmininet.router.config.zebra import RouteMap
 from ipmininet.router.config.zebra import RouteMap, CommunityList, AccessList, AccessListEntry
@@ -110,10 +110,43 @@ class MyTopology(IPTopo):
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
     
     def setup_border_routers(self, routers):
+        bogon_ipv4_transit_filter = [TransitFilter(default="ACCEPT", rules=[
+                        Deny(proto='all', src='0.0.0.0/8'),
+                        Deny(proto='all', src='10.0.0.0/8'),
+                        Deny(proto='all', src='100.64.0.0/10'),
+                        Deny(proto='all', src='127.0.0.0/8'),
+                        Deny(proto='all', src='127.0.53.53/32'),
+                        Deny(proto='all', src='169.254.0.0/16'),
+                        Deny(proto='all', src='172.16.0.0/12'),
+                        Deny(proto='all', src='192.0.0.0/24'),
+                        Deny(proto='all', src='192.168.0.0/16'),
+                        Deny(proto='all', src='198.18.0.0/15'),
+                        Deny(proto='all', src='198.51.100.0/24'),
+                        Deny(proto='all', src='203.0.113.0/24'),
+                        Deny(proto='all', src='224.0.0.0/4'),
+                        Deny(proto='all', src='240.0.0.0/4'),
+                        Deny(proto='all', src='255.255.255.255/32')])]
+        bogon_ipv6_transit_filter = [
+        Rule('-A FORWARD -p all -s ::/128 -j DROP'),
+        Rule('-A FORWARD -p all -s ::1/128 -j DROP'),
+        Rule('-A FORWARD -p all -s ::ffff:0:0/96 -j DROP'),
+        Rule('-A FORWARD -p all -s ::/96 -j DROP'),
+        Rule('-A FORWARD -p all -s 100::/64 -j DROP'),
+        Rule('-A FORWARD -p all -s 2001:10::/28 -j DROP'),
+        Rule('-A FORWARD -p all -s 2001:db8::/32 -j DROP'),
+        Rule('-A FORWARD -p all -s fc00::/7 -j DROP'),
+        Rule('-A FORWARD -p all -s fe80::/10 -j DROP'),
+        Rule('-A FORWARD -p all -s fec0::/10 -j DROP'),
+        Rule('-A FORWARD -p all -s ff00::/8 -j DROP'),
+        Rule('-A FORWARD -p all -j ACCEPT')]
+        
         for r in routers:
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(redistribute=['static']),AF_INET(redistribute=['static'])))
+            r.addDaemon(IPTables, rules=bogon_ipv4_transit_filter)
+            r.addDaemon(IP6Tables, rules=bogon_ipv6_transit_filter)
+
             
     def setup_server_routers(self, routers):
         for r in routers:
