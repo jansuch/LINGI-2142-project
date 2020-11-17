@@ -288,9 +288,9 @@ class MyTopology(IPTopo):
         
         # =================================================== END of Paris ==================================================
 
-        internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] #+ [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
+        internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] + [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
                 
-        border_routers = [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5] #[lon_thw_border, lon_drch_border, gra_g1_border, gra_g2_border, fra_1_border, fra_5_border, rbx_g1_border, rbx_g2_border, par_gsw_border, par_th2_border]
+        border_routers = [lon_thw_border, lon_drch_border, gra_g1_border, gra_g2_border, fra_1_border, fra_5_border, rbx_g1_border, rbx_g2_border, par_gsw_border, par_th2_border]
         
         server_routers = [fra_fr5_sbb2_nc5, rbx_g1_nc5, rbx_g2_nc5]
 
