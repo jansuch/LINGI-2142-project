@@ -179,20 +179,16 @@ class MyTopology(IPTopo):
         
         # ================================================== START of London ==================================================
 
-        lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])       
+        lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0281::/128", "192.148.3.1/32"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.0/30","2001:41D0:0:0200::/64"])
         
         lon_thw_border = self.addRouter("lon_3", config=RouterConfig)
-        lon_drch_border = self.addRouter("lon_4", config=RouterConfig)
-        self.addLinks((lon_thw_sbb1_nc5, lon_thw_border), (lon_drch_sbb1_nc5, lon_drch_border))
+        self.addLinks((lon_thw_sbb1_nc5, lon_thw_border))
         self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_thw_border], subnets=["192.148.2.148/30","2001:41D0:0:0201::/64"])
-        self.addSubnet(nodes=[lon_drch_sbb1_nc5, lon_drch_border], subnets=["192.148.2.152/30","2001:41D0:0:0202::/64"])
         lon_thw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0202::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.149")])
-        lon_drch_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0201::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.153")])
         
         set_rr(self, rr=lon_thw_sbb1_nc5, peers=[lon_thw_border])
-        set_rr(self, rr=lon_drch_sbb1_nc5, peers=[lon_drch_border])
         
 	# =================================================== END of London ===================================================
 	# ================================================ START of Gravelines ================================================
@@ -202,18 +198,8 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[gra_g1_nc5, gra_g2_nc5], subnets=["192.148.2.4/30","2001:41D0:0:0000::/64"])
         self.addSubnet(nodes=[gra_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.2.8/30","2001:41D0:0:1F00::/64"])
         self.addSubnet(nodes=[gra_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.12/30","2001:41D0:0:1F01::/64"])
-        
-        gra_g1_border = self.addRouter("gra_3", config=RouterConfig)
-        gra_g2_border = self.addRouter("gra_4", config=RouterConfig)
-        self.addLinks((gra_g1_nc5, gra_g1_border), (gra_g2_nc5, gra_g2_border))
-        self.addSubnet(nodes=[gra_g1_nc5, gra_g1_border], subnets=["192.148.2.156/30","2001:41D0:0:0007::/64"])
-        self.addSubnet(nodes=[gra_g2_nc5, gra_g2_border], subnets=["192.148.2.160/30","2001:41D0:0:0008::/64"])
-        gra_g1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0007::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.157")])
-        gra_g2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0008::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.161")])
-        
-        set_rr(self, rr=gra_g1_nc5, peers=[gra_g1_border])
-        set_rr(self, rr=gra_g2_nc5, peers=[gra_g2_border])
-        
+
+
         # ================================================= END of Gravelines =================================================
         # ================================================ START of Frankfurt =================================================
 
@@ -251,19 +237,8 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[rbx_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.2.56/30","2001:41D0:0:1F05::/64"])
         self.addSubnet(nodes=[rbx_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.2.60/30","2001:41D0:0:1F06::/64"])
         self.addSubnet(nodes=[rbx_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.64/30","2001:41D0:0:1F07::/64"])
-        
-        rbx_g1_border = self.addRouter("rbx_3", config=RouterConfig)
-        rbx_g2_border = self.addRouter("rbx_4", config=RouterConfig)
-        self.addLinks((rbx_g1_nc5, rbx_g1_border), (rbx_g2_nc5, rbx_g2_border))
-        self.addSubnet(nodes=[rbx_g1_nc5, rbx_g1_border], subnets=["192.148.2.172/30","2001:41D0:0:0007::/64"])
-        self.addSubnet(nodes=[rbx_g2_nc5, rbx_g2_border], subnets=["192.148.2.176/30","2001:41D0:0:0008::/64"])
-        rbx_g1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0007::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.173")])
-        rbx_g2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0008::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.177")])
-        
-        set_rr(self, rr=rbx_g1_nc5, peers=[rbx_g1_border])
-        set_rr(self, rr=rbx_g2_nc5, peers=[rbx_g2_border])
 
-        
+
         # ================================================== END of Roubaix =================================================
         # ================================================== START of Paris =================================================
 
@@ -289,9 +264,9 @@ class MyTopology(IPTopo):
         # =================================================== END of Paris ==================================================
 
         internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] + [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
-                
-        border_routers = [lon_thw_border, lon_drch_border, gra_g1_border, gra_g2_border, fra_1_border, fra_5_border, rbx_g1_border, rbx_g2_border, par_gsw_border, par_th2_border]
-        
+
+        border_routers = [lon_thw_border, fra_1_border, fra_5_border, par_gsw_border, par_th2_border]
+
         server_routers = [fra_fr5_sbb2_nc5, rbx_g1_nc5, rbx_g2_nc5]
 
         self.setup_internal_routers(internal_routers)
@@ -445,17 +420,17 @@ class MyTopology(IPTopo):
         self.addiBGPFullMesh(1272,routers=vodafone_border_routers+[vodafone_int])
         self.addAS(1272,routers=vodafone_border_routers+[vodafone_int])
 
-        self.addLinks((par_th2_sbb1_nc5,vodafone_r2),(fra_5_n7,vodafone_r4),(fra_1_n7,vodafone_r3),(par_gsw_sbb1_nc5,vodafone_r1))
+        self.addLinks((par_th2_border,vodafone_r2),(fra_5_border,vodafone_r4),(fra_1_border,vodafone_r3),(par_gsw_border,vodafone_r1))
 
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,vodafone_r1], subnets=["192.148.2.112/30", "2001:41D0:0:1F0E::/64"])
-        self.addSubnet(nodes=[fra_1_n7,vodafone_r3], subnets=["192.148.2.108/30", "2001:41D0:0:1F0D::/64"])
-        self.addSubnet(nodes=[fra_5_n7,vodafone_r4], subnets=["192.148.2.104/30", "2001:41D0:0:1F0C::/64"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,vodafone_r2], subnets=["192.148.2.100/30", "2001:41D0:0:1F0B::/64"])
+        self.addSubnet(nodes=[par_gsw_border,vodafone_r1], subnets=["192.148.2.112/30", "2001:41D0:0:1F0E::/64"])
+        self.addSubnet(nodes=[fra_1_border,vodafone_r3], subnets=["192.148.2.108/30", "2001:41D0:0:1F0D::/64"])
+        self.addSubnet(nodes=[fra_5_border,vodafone_r4], subnets=["192.148.2.104/30", "2001:41D0:0:1F0C::/64"])
+        self.addSubnet(nodes=[par_th2_border,vodafone_r2], subnets=["192.148.2.100/30", "2001:41D0:0:1F0B::/64"])
 
-        ebgp_session(self,par_th2_sbb1_nc5,vodafone_r2)
-        ebgp_session(self,fra_5_n7,vodafone_r4 )
-        ebgp_session(self,fra_1_n7,vodafone_r3 )
-        ebgp_session(self,par_gsw_sbb1_nc5,vodafone_r1 )
+        ebgp_session(self,par_th2_border,vodafone_r2)
+        ebgp_session(self,fra_5_border,vodafone_r4 )
+        ebgp_session(self,fra_1_border,vodafone_r3 )
+        ebgp_session(self,par_gsw_border,vodafone_r1 )
 
         self.setup_border_routers(vodafone_border_routers)
         self.setup_internal_routers([vodafone_int])
@@ -489,15 +464,15 @@ class MyTopology(IPTopo):
         self.addiBGPFullMesh(174,routers=cogent_border_routers+[cogent_int])
         self.addAS(174,routers=cogent_border_routers+[cogent_int])
 
-        self.addLinks((par_gsw_sbb1_nc5,cogent_r1),(lon_thw_sbb1_nc5,cogent_r3),(par_th2_sbb1_nc5,cogent_r2))
+        self.addLinks((par_gsw_border,cogent_r1),(lon_thw_border,cogent_r3),(par_th2_border,cogent_r2))
 
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,cogent_r2], subnets=["192.148.2.124/30", "2001:41D0:0:1F11::/64"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5,cogent_r3], subnets=["192.148.2.120/30", "2001:41D0:0:1F10::/64"])
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,cogent_r1], subnets=["192.148.2.116/30", "2001:41D0:0:1F0F::/64"])
+        self.addSubnet(nodes=[par_th2_border,cogent_r2], subnets=["192.148.2.124/30", "2001:41D0:0:1F11::/64"])
+        self.addSubnet(nodes=[lon_thw_border,cogent_r3], subnets=["192.148.2.120/30", "2001:41D0:0:1F10::/64"])
+        self.addSubnet(nodes=[par_gsw_border,cogent_r1], subnets=["192.148.2.116/30", "2001:41D0:0:1F0F::/64"])
 
-        ebgp_session(self,par_gsw_sbb1_nc5,cogent_r1 )
-        ebgp_session(self,lon_thw_sbb1_nc5,cogent_r3 )
-        ebgp_session(self,par_th2_sbb1_nc5,cogent_r2 )
+        ebgp_session(self,par_gsw_border,cogent_r1 )
+        ebgp_session(self,lon_thw_border,cogent_r3 )
+        ebgp_session(self,par_th2_border,cogent_r2 )
 
         self.setup_border_routers(cogent_border_routers)
         self.setup_internal_routers([cogent_int])
@@ -529,15 +504,15 @@ class MyTopology(IPTopo):
         self.addiBGPFullMesh(1299, routers=telia_border_routers+[telia_int])
 
         self.addAS(1299,routers=telia_border_routers+[telia_int])
-        self.addLinks((fra_5_n7,telia_r2),(fra_1_n7,telia_r1),(lon_thw_sbb1_nc5,telia_r3))
+        self.addLinks((fra_5_border,telia_r2),(fra_1_border,telia_r1),(lon_thw_border,telia_r3))
 
-        self.addSubnet(nodes=[fra_5_n7,telia_r2], subnets=["192.148.2.128/30", "2001:41D0:0:1F12::/64"])
-        self.addSubnet(nodes=[fra_1_n7,telia_r1], subnets=["192.148.2.132/30", "2001:41D0:0:1F13::/64"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5,telia_r3], subnets=["192.148.2.136/30", "2001:41D0:0:1F14::/64"])
+        self.addSubnet(nodes=[fra_5_border,telia_r2], subnets=["192.148.2.128/30", "2001:41D0:0:1F12::/64"])
+        self.addSubnet(nodes=[fra_1_border,telia_r1], subnets=["192.148.2.132/30", "2001:41D0:0:1F13::/64"])
+        self.addSubnet(nodes=[lon_thw_border,telia_r3], subnets=["192.148.2.136/30", "2001:41D0:0:1F14::/64"])
 
-        ebgp_session(self,fra_5_n7,telia_r2 )
-        ebgp_session(self,fra_1_n7,telia_r1 )
-        ebgp_session(self,lon_thw_sbb1_nc5,telia_r3 )
+        ebgp_session(self,fra_5_border,telia_r2 )
+        ebgp_session(self,fra_1_border,telia_r1 )
+        ebgp_session(self,lon_thw_border,telia_r3 )
 
         self.setup_border_routers(telia_border_routers)
         self.setup_internal_routers([telia_int])
@@ -566,12 +541,12 @@ class MyTopology(IPTopo):
         self.addiBGPFullMesh(16509,routers=amazon_border_routers+[amazon_int])
 
         self.addAS(16509,routers=amazon_border_routers+[amazon_int])
-        self.addLinks((lon_thw_sbb1_nc5,amazon_r2),(par_th2_sbb1_nc5,amazon_r1))
+        self.addLinks((lon_thw_border,amazon_r2),(par_th2_border,amazon_r1))
 
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,amazon_r1], subnets=["192.148.2.140/30", "2001:41D0:0:1F15::/64"])
-        self.addSubnet(nodes=[lon_thw_sbb1_nc5,amazon_r2], subnets=["192.148.2.144/30", "2001:41D0:0:1F16::/64"])
-        ebgp_session(self,par_th2_sbb1_nc5,amazon_r1 )
-        ebgp_session(self,lon_thw_sbb1_nc5,amazon_r2 )
+        self.addSubnet(nodes=[par_th2_border,amazon_r1], subnets=["192.148.2.140/30", "2001:41D0:0:1F15::/64"])
+        self.addSubnet(nodes=[lon_thw_border,amazon_r2], subnets=["192.148.2.144/30", "2001:41D0:0:1F16::/64"])
+        ebgp_session(self,par_th2_border,amazon_r1 )
+        ebgp_session(self,lon_thw_border,amazon_r2 )
 
         self.setup_border_routers(amazon_border_routers)#,vodafone,cogent,telia,amazon])
         self.setup_internal_routers([amazon_int])
