@@ -130,7 +130,7 @@ class MyTopology(IPTopo):
     def setup_servers(self, servers, routers):
         for s in servers:
             s.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
-            s.get_config(BGP).filter(name="anycast-only", to_peer=routers, policy="deny", matching=[AccessList(entries=("192.148.3.12/32","192.148.3.13/32","192.148.3.14/32","192.148.0.0/30","192.148.0.12/30","192.148.0.20/30"))])
+            #s.get_config(BGP).filter(name="anycast-only", to_peer=routers, policy="deny", matching=[AccessList(entries=("192.148.3.12/32","192.148.3.13/32","192.148.3.14/32","192.148.0.0/30","192.148.0.12/30","192.148.0.20/30"))])
     
 
     def build(self, *args, **kwargs):
@@ -138,16 +138,51 @@ class MyTopology(IPTopo):
         LOCAL_PREF_LOW=['16276:7100',50]
         LOCAL_PREFS=[LOCAL_PREF_HIGH,LOCAL_PREF_LOW]
         all_al=AccessList('all',('any',))
+        
+        #OVH_IPv4_prefix = "192.148.1.0/24"
+        OVH_IPv4_prefix = "192.148.0.0/16"
+        #OVH_IPv6_prefix = "2001:41D0:0000:00C0::/64"
+        OVH_IPv6_prefix = "2001:41D0::/48"
+        
+        # ================================================== START of London ==================================================
 
-        lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
+        lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])       
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0281::/128", "192.148.3.1/32"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.0/30","2001:41D0:0:0200::/64"])
+        
+        lon_thw_border = self.addRouter("lon_3", config=RouterConfig)
+        lon_drch_border = self.addRouter("lon_4", config=RouterConfig)
+        self.addLinks((lon_thw_sbb1_nc5, lon_thw_border), (lon_drch_sbb1_nc5, lon_drch_border))
+        self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_thw_border], subnets=["192.148.2.148/30","2001:41D0:0:0201::/64"])
+        self.addSubnet(nodes=[lon_drch_sbb1_nc5, lon_drch_border], subnets=["192.148.2.152/30","2001:41D0:0:0202::/64"])
+        lon_thw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0202::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.149")])
+        lon_drch_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0201::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.153")])
+        
+        set_rr(self, rr=lon_thw_sbb1_nc5, peers=[lon_thw_border])
+        set_rr(self, rr=lon_drch_sbb1_nc5, peers=[lon_drch_border])
+        
+	# =================================================== END of London ===================================================
+	# ================================================ START of Gravelines ================================================
 
         gra_g1_nc5 = self.addRouter("gra_1", config=RouterConfig,lo_addresses=["2001:41D0:0000:0080::/128", "192.148.3.2/32"])
         gra_g2_nc5 = self.addRouter("gra_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0081::/128", "192.148.3.3/32"])
         self.addSubnet(nodes=[gra_g1_nc5, gra_g2_nc5], subnets=["192.148.2.4/30","2001:41D0:0:0000::/64"])
         self.addSubnet(nodes=[gra_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.2.8/30","2001:41D0:0:1F00::/64"])
         self.addSubnet(nodes=[gra_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.12/30","2001:41D0:0:1F01::/64"])
+        
+        gra_g1_border = self.addRouter("gra_3", config=RouterConfig)
+        gra_g2_border = self.addRouter("gra_4", config=RouterConfig)
+        self.addLinks((gra_g1_nc5, gra_g1_border), (gra_g2_nc5, gra_g2_border))
+        self.addSubnet(nodes=[gra_g1_nc5, gra_g1_border], subnets=["192.148.2.156/30","2001:41D0:0:0007::/64"])
+        self.addSubnet(nodes=[gra_g2_nc5, gra_g2_border], subnets=["192.148.2.160/30","2001:41D0:0:0008::/64"])
+        gra_g1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0007::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.157")])
+        gra_g2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0008::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.161")])
+        
+        set_rr(self, rr=gra_g1_nc5, peers=[gra_g1_border])
+        set_rr(self, rr=gra_g2_nc5, peers=[gra_g2_border])
+        
+        # ================================================= END of Gravelines =================================================
+        # ================================================ START of Frankfurt =================================================
 
         fra_fr5_sbb1_nc5 = self.addRouter("fra_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0180::/128", "192.148.3.4/32"])
         fra_fr5_sbb2_nc5 = self.addRouter("fra_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0181::/128", "192.148.3.5/32"])
@@ -161,7 +196,21 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb2_nc5], subnets=["192.148.2.36/30","2001:41D0:0:0105::/64"])
         self.addSubnet(nodes=[gra_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.2.40/30","2001:41D0:0:1F02::/64"])
         self.addSubnet(nodes=[gra_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.2.44/30","2001:41D0:0:1F03::/64"])
+        
+        fra_1_border = self.addRouter("fra_5", config=RouterConfig)
+        fra_5_border = self.addRouter("fra_6", config=RouterConfig)
+        self.addLinks((fra_1_n7, fra_1_border), (fra_5_n7, fra_5_border))
+        self.addSubnet(nodes=[fra_1_n7, fra_1_border], subnets=["192.148.2.164/30","2001:41D0:0:0106::/64"])
+        self.addSubnet(nodes=[fra_5_n7, fra_5_border], subnets=["192.148.2.168/30","2001:41D0:0:0107::/64"])
+        fra_1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0106::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.165")])
+        fra_5_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0107::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.169")])
+        
+        set_rr(self, rr=fra_1_n7, peers=[fra_1_border])
+        set_rr(self, rr=fra_5_n7, peers=[fra_5_border])
 
+        # ================================================== END of Frankfurt =================================================
+        # ================================================== START of Roubaix =================================================
+	
         rbx_g1_nc5 = self.addRouter("rbx_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0082::/128", "192.148.3.8/32"])
         rbx_g2_nc5 = self.addRouter("rbx_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0083::/128", "192.148.3.9/32"])
         self.addSubnet(nodes=[rbx_g1_nc5, rbx_g2_nc5], subnets=["192.148.2.48/30","2001:41D0:0:0001::/64"])
@@ -169,6 +218,21 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[rbx_g1_nc5, lon_thw_sbb1_nc5], subnets=["192.148.2.56/30","2001:41D0:0:1F05::/64"])
         self.addSubnet(nodes=[rbx_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.2.60/30","2001:41D0:0:1F06::/64"])
         self.addSubnet(nodes=[rbx_g2_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.64/30","2001:41D0:0:1F07::/64"])
+        
+        rbx_g1_border = self.addRouter("rbx_3", config=RouterConfig)
+        rbx_g2_border = self.addRouter("rbx_4", config=RouterConfig)
+        self.addLinks((rbx_g1_nc5, rbx_g1_border), (rbx_g2_nc5, rbx_g2_border))
+        self.addSubnet(nodes=[rbx_g1_nc5, rbx_g1_border], subnets=["192.148.2.172/30","2001:41D0:0:0007::/64"])
+        self.addSubnet(nodes=[rbx_g2_nc5, rbx_g2_border], subnets=["192.148.2.176/30","2001:41D0:0:0008::/64"])
+        rbx_g1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0007::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.173")])
+        rbx_g2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0008::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.177")])
+        
+        set_rr(self, rr=rbx_g1_nc5, peers=[rbx_g1_border])
+        set_rr(self, rr=rbx_g2_nc5, peers=[rbx_g2_border])
+
+        
+        # ================================================== END of Roubaix =================================================
+        # ================================================== START of Paris =================================================
 
         par_gsw_sbb1_nc5 = self.addRouter("par_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0084::/128", "192.148.3.10/32"])
         par_th2_sbb1_nc5 = self.addRouter("par_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0085::/128", "192.148.3.11/32"])
@@ -177,10 +241,23 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[par_gsw_sbb1_nc5, gra_g1_nc5], subnets=["192.148.2.76/30","2001:41D0:0:0004::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, gra_g2_nc5], subnets=["192.148.2.80/30","2001:41D0:0:0005::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, rbx_g1_nc5], subnets=["192.148.2.84/30","2001:41D0:0:0006::/64"])
+        
+        par_gsw_border = self.addRouter("par_3", config=RouterConfig)
+        par_th2_border = self.addRouter("par_4", config=RouterConfig)
+        self.addLinks((par_gsw_sbb1_nc5, par_gsw_border), (par_th2_sbb1_nc5, par_th2_border))
+        self.addSubnet(nodes=[par_gsw_sbb1_nc5, par_gsw_border], subnets=["192.148.2.180/30","2001:41D0:0:0009::/64"])
+        self.addSubnet(nodes=[par_th2_sbb1_nc5, par_th2_border], subnets=["192.148.2.184/30","2001:41D0:0:0010::/64"])
+        par_gsw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0009::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.181")])
+        par_th2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0010::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.185")])
+        
+        set_rr(self, rr=par_gsw_sbb1_nc5, peers=[par_gsw_border])
+        set_rr(self, rr=par_th2_sbb1_nc5, peers=[par_th2_border])
+        
+        # =================================================== END of Paris ==================================================
 
-        internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5]
+        internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] #+ [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
                 
-        border_routers = [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
+        border_routers = [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5] #[lon_thw_border, lon_drch_border, gra_g1_border, gra_g2_border, fra_1_border, fra_5_border, rbx_g1_border, rbx_g2_border, par_gsw_border, par_th2_border]
         
         server_routers = [fra_fr5_sbb2_nc5, rbx_g1_nc5, rbx_g2_nc5]
 
@@ -196,9 +273,9 @@ class MyTopology(IPTopo):
         #        rbx_g1_nc5,rbx_g2_nc5,
         #        par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
                 
-        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.12/32"])       
-        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.13/32"])
-        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.14/32"])
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0086::/128", "192.148.3.12/32"])       
+        MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0087::/128","192.148.3.13/32"])
+        MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0088::/128","192.148.3.14/32"])
         
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
         MyServer1.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:0007::2"),StaticRoute("0.0.0.0/0", "192.148.0.2")])
@@ -239,46 +316,69 @@ class MyTopology(IPTopo):
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/128","8.8.5.3/32"])
         google_border_routers = [google_r1, google_r2, google_r3]
         
-        google_int=self.addRouter("google_int",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
+        google_i1=self.addRouter("google_i1",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
+        google_i2=self.addRouter("google_i2",config=RouterConfig,lo_addresses=["2001:4860:0:5::/128","8.8.5.5/32"])
+        google_i3=self.addRouter("google_i3",config=RouterConfig,lo_addresses=["2001:4860:0:6::/128","8.8.5.6/32"])
         google_h1=self.addHost("google_h1")
+        google_h2=self.addHost("google_h2")
+        google_h3=self.addHost("google_h3")
         
-        google_r1int = self.addLink(google_int, google_r1)
-        google_r2int = self.addLink(google_int, google_r2)
-        google_r3int = self.addLink(google_int, google_r3)
-        google_h1int = self.addLink(google_h1, google_int)
-        #self.addLinks(
-        #	(google_int, google_r1),
-        #	(google_int, google_r2),
-        #	(google_int, google_r3),
-        #	(google_int, google_h1)
-        #)
+        '''
+        google_r1i1 = self.addLink(google_i1, google_r1)
+        google_r2i2 = self.addLink(google_i2, google_r2)
+        google_r3i3 = self.addLink(google_i3, google_r3)
+        google_h1i1 = self.addLink(google_h1, google_i1)
+        google_h2i2 = self.addLink(google_h2, google_i2)
+        google_h3i3 = self.addLink(google_h3, google_i3)
+        '''
+        self.addLinks(
+        	(google_i1, google_r1),
+        	(google_i2, google_r2),
+        	(google_i3, google_r3),
+        	(google_i1, google_i2),
+        	(google_i2, google_i3),
+        	(google_h1, google_i1),
+        	(google_h2, google_i2),
+        	(google_h3, google_i3)
+        )
         
-        self.addSubnet(nodes=[google_r1, google_int], subnets=["2001:4860:1:1::/64","8.8.1.0/24"])
-        self.addSubnet(nodes=[google_r2, google_int], subnets=["2001:4860:1:2::/64","8.8.2.0/24"])
-        self.addSubnet(nodes=[google_r3, google_int], subnets=["2001:4860:1:3::/64","8.8.3.0/24"])
-        self.addSubnet(nodes=[google_int, google_h1], subnets=["2001:4860:1:4::/64","8.8.4.0/24"])
+        self.addSubnet(nodes=[google_r1, google_i1], subnets=["2001:4860:1:1::/64","8.8.1.0/30"])
+        self.addSubnet(nodes=[google_r2, google_i2], subnets=["2001:4860:1:2::/64","8.8.1.4/30"])
+        self.addSubnet(nodes=[google_r3, google_i3], subnets=["2001:4860:1:3::/64","8.8.1.8/30"])
+        self.addSubnet(nodes=[google_i1, google_h1], subnets=["2001:4860:1:4::/64","8.8.2.0/30"])
+        self.addSubnet(nodes=[google_i2, google_h2], subnets=["2001:4860:1:5::/64","8.8.2.4/30"])
+        self.addSubnet(nodes=[google_i3, google_h3], subnets=["2001:4860:1:6::/64","8.8.2.8/30"])
         
         #self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860::/48","8.8.0.0/16"])
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
         #link_google_h1[google_r1].addParams(ip=("2001:4860:1:1::/64", "8.8.5.1/32"))
         
         google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
-        google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.2.2")])
-        google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.3.2")])
-        self.addiBGPFullMesh(15169, routers=google_border_routers + [google_int])
+        google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.1.6")])
+        google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.1.10")])
+        self.addiBGPFullMesh(15169, routers=[google_r1, google_i1]+[google_r2, google_i2]+[google_r3, google_i3])
+        #self.addiBGPFullMesh(15169, routers=[google_r2, google_i2])
+        #self.addiBGPFullMesh(15169, routers=[google_r3, google_i3])
         
-        self.addAS(15169,routers=google_border_routers + [google_int])
-        self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
+        self.addAS(15169,routers=google_border_routers + [google_i1, google_i2, google_i3])
+        #self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
+        self.addLinks((par_gsw_border, google_r1), (fra_5_border, google_r3), (par_th2_border, google_r2))
+        
+        #self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
+        #self.addSubnet(nodes=[fra_5_n7,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
+        #self.addSubnet(nodes=[par_th2_sbb1_nc5,google_r2], subnets=["2001:41D0:0:1F0A::/64", "192.148.2.96/30"])
+        self.addSubnet(nodes=[par_gsw_border,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
+        self.addSubnet(nodes=[fra_5_border,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
+        self.addSubnet(nodes=[par_th2_border,google_r2], subnets=["2001:41D0:0:1F0A::/64", "192.148.2.96/30"])
 
-        self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
-        self.addSubnet(nodes=[fra_5_n7,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
-        self.addSubnet(nodes=[par_th2_sbb1_nc5,google_r2], subnets=["2001:41D0:0:1F0A::/64", "192.148.2.96/30"])
+        #ebgp_session(self,par_gsw_sbb1_nc5,google_r1)
+        #ebgp_session(self,fra_5_n7,google_r3)
+        #ebgp_session(self,par_th2_sbb1_nc5,google_r2)
+        ebgp_session(self,par_gsw_border,google_r1)
+        ebgp_session(self,fra_5_border,google_r3)
+        ebgp_session(self,par_th2_border,google_r2)
 
-        ebgp_session(self,par_gsw_sbb1_nc5,google_r1)
-        ebgp_session(self,fra_5_n7,google_r3)
-        ebgp_session(self,par_th2_sbb1_nc5,google_r2)
-
-        self.setup_internal_routers([google_int])
+        self.setup_internal_routers([google_i1, google_i2, google_i3])
         self.setup_border_routers(google_border_routers)
 
         '''********************************************************************************'''
