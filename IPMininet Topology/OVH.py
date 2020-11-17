@@ -172,10 +172,10 @@ class MyTopology(IPTopo):
         LOCAL_PREFS=[LOCAL_PREF_HIGH,LOCAL_PREF_LOW]
         all_al=AccessList('all',('any',))
         
-        #OVH_IPv4_prefix = "192.148.1.0/24"
-        OVH_IPv4_prefix = "192.148.0.0/16"
-        #OVH_IPv6_prefix = "2001:41D0:0000:00C0::/64"
-        OVH_IPv6_prefix = "2001:41D0::/48"
+        OVH_IPv4_prefix = "192.148.1.0/24"
+        #OVH_IPv4_prefix = "192.148.0.0/16"
+        OVH_IPv6_prefix = "2001:41D0:0000:00C0::/64"
+        #OVH_IPv6_prefix = "2001:41D0::/48"
         
         # ================================================== START of London ==================================================
 
@@ -324,12 +324,12 @@ class MyTopology(IPTopo):
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/128","8.8.5.3/32"])
         google_border_routers = [google_r1, google_r2, google_r3]
         
-        google_i1=self.addRouter("google_i1",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
-        google_i2=self.addRouter("google_i2",config=RouterConfig,lo_addresses=["2001:4860:0:5::/128","8.8.5.5/32"])
-        google_i3=self.addRouter("google_i3",config=RouterConfig,lo_addresses=["2001:4860:0:6::/128","8.8.5.6/32"])
+        google_int=self.addRouter("google_int",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
+        #google_i2=self.addRouter("google_i2",config=RouterConfig,lo_addresses=["2001:4860:0:5::/128","8.8.5.5/32"])
+        #google_i3=self.addRouter("google_i3",config=RouterConfig,lo_addresses=["2001:4860:0:6::/128","8.8.5.6/32"])
         google_h1=self.addHost("google_h1")
-        google_h2=self.addHost("google_h2")
-        google_h3=self.addHost("google_h3")
+        #google_h2=self.addHost("google_h2")
+        #google_h3=self.addHost("google_h3")
         
         '''
         google_r1i1 = self.addLink(google_i1, google_r1)
@@ -340,22 +340,22 @@ class MyTopology(IPTopo):
         google_h3i3 = self.addLink(google_h3, google_i3)
         '''
         self.addLinks(
-        	(google_i1, google_r1),
-        	(google_i2, google_r2),
-        	(google_i3, google_r3),
-        	(google_i1, google_i2),
-        	(google_i2, google_i3),
-        	(google_h1, google_i1),
-        	(google_h2, google_i2),
-        	(google_h3, google_i3)
+        	(google_int, google_r1),
+        	(google_int, google_r2),
+        	(google_int, google_r3),
+        	#(google_i1, google_i2),
+        	#(google_i2, google_i3),
+        	(google_h1, google_int)
+        	#(google_h2, google_i2),
+        	#(google_h3, google_i3)
         )
         
-        self.addSubnet(nodes=[google_r1, google_i1], subnets=["2001:4860:1:1::/64","8.8.1.0/30"])
-        self.addSubnet(nodes=[google_r2, google_i2], subnets=["2001:4860:1:2::/64","8.8.1.4/30"])
-        self.addSubnet(nodes=[google_r3, google_i3], subnets=["2001:4860:1:3::/64","8.8.1.8/30"])
-        self.addSubnet(nodes=[google_i1, google_h1], subnets=["2001:4860:1:4::/64","8.8.2.0/30"])
-        self.addSubnet(nodes=[google_i2, google_h2], subnets=["2001:4860:1:5::/64","8.8.2.4/30"])
-        self.addSubnet(nodes=[google_i3, google_h3], subnets=["2001:4860:1:6::/64","8.8.2.8/30"])
+        self.addSubnet(nodes=[google_r1, google_int], subnets=["2001:4860:1:1::/64","8.8.1.0/30"])
+        self.addSubnet(nodes=[google_r2, google_int], subnets=["2001:4860:1:2::/64","8.8.1.4/30"])
+        self.addSubnet(nodes=[google_r3, google_int], subnets=["2001:4860:1:3::/64","8.8.1.8/30"])
+        self.addSubnet(nodes=[google_int, google_h1], subnets=["2001:4860:1:4::/64","8.8.2.0/30"])
+        #self.addSubnet(nodes=[google_i2, google_h2], subnets=["2001:4860:1:5::/64","8.8.2.4/30"])
+        #self.addSubnet(nodes=[google_i3, google_h3], subnets=["2001:4860:1:6::/64","8.8.2.8/30"])
         
         #self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860::/48","8.8.0.0/16"])
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
@@ -364,11 +364,11 @@ class MyTopology(IPTopo):
         google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
         google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.1.6")])
         google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.1.10")])
-        self.addiBGPFullMesh(15169, routers=[google_r1, google_i1]+[google_r2, google_i2]+[google_r3, google_i3])
+        self.addiBGPFullMesh(15169, routers=[google_r1, google_int, google_r2, google_r3])
         #self.addiBGPFullMesh(15169, routers=[google_r2, google_i2])
         #self.addiBGPFullMesh(15169, routers=[google_r3, google_i3])
         
-        self.addAS(15169,routers=google_border_routers + [google_i1, google_i2, google_i3])
+        self.addAS(15169,routers=google_border_routers + [google_int])
         #self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
         self.addLinks((par_gsw_border, google_r1), (fra_5_border, google_r3), (par_th2_border, google_r2))
         
@@ -386,7 +386,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_5_border,google_r3)
         ebgp_session(self,par_th2_border,google_r2)
 
-        self.setup_internal_routers([google_i1, google_i2, google_i3])
+        self.setup_internal_routers([google_int])
         self.setup_border_routers(google_border_routers)
 
         '''********************************************************************************'''
