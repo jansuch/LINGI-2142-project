@@ -108,7 +108,7 @@ class MyTopology(IPTopo):
     #    OSPFv3 and BGP. Add also a new host as3_h3 in a new lan 7ac0:d0d0:15:dead::/64 in one of the 4 routers.
     #    h1, h2 and h3 must reach each other. The iBGP sessions, this time, must be in
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
-    
+
     def setup_border_routers(self, routers):
         bogon_ipv4_transit_filter = [TransitFilter(default="ACCEPT", rules=[
                         Deny(proto='all', src='0.0.0.0/8'),
@@ -139,7 +139,7 @@ class MyTopology(IPTopo):
         Rule('-A FORWARD -p all -s fec0::/10 -j DROP'),
         Rule('-A FORWARD -p all -s ff00::/8 -j DROP'),
         Rule('-A FORWARD -p all -j ACCEPT')]
-        
+
         for r in routers:
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
@@ -147,24 +147,24 @@ class MyTopology(IPTopo):
             r.addDaemon(IPTables, rules=bogon_ipv4_transit_filter)
             r.addDaemon(IP6Tables, rules=bogon_ipv6_transit_filter)
 
-            
+
     def setup_server_routers(self, routers):
         for r in routers:
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(),AF_INET()))
-            
+
     def setup_internal_routers(self, routers):
         for r in routers:
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(),AF_INET()))
-            
+
     def setup_servers(self, servers, routers):
         for s in servers:
             s.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
             #s.get_config(BGP).filter(name="anycast-only", to_peer=routers, policy="deny", matching=[AccessList(entries=("192.148.3.12/32","192.148.3.13/32","192.148.3.14/32","192.148.0.0/30","192.148.0.12/30","192.148.0.20/30"))])
-    
+
 
     def build(self, *args, **kwargs):
         LOCAL_PREF_HIGH=['16276:7200',200]
@@ -182,14 +182,14 @@ class MyTopology(IPTopo):
         lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
         lon_drch_sbb1_nc5 = self.addRouter("lon_2", config=RouterConfig,lo_addresses=["2001:41D0:0000:0281::/128", "192.148.3.1/32"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_drch_sbb1_nc5], subnets=["192.148.2.0/30","2001:41D0:0:0200::/64"])
-        
+
         lon_thw_border = self.addRouter("lon_3", config=RouterConfig)
         self.addLinks((lon_thw_sbb1_nc5, lon_thw_border))
         self.addSubnet(nodes=[lon_thw_sbb1_nc5, lon_thw_border], subnets=["192.148.2.148/30","2001:41D0:0:0201::/64"])
         lon_thw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0202::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.149")])
-        
+
         set_rr(self, rr=lon_thw_sbb1_nc5, peers=[lon_thw_border])
-        
+
 	# =================================================== END of London ===================================================
 	# ================================================ START of Gravelines ================================================
 
@@ -215,7 +215,7 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb2_nc5], subnets=["192.148.2.36/30","2001:41D0:0:0105::/64"])
         self.addSubnet(nodes=[gra_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.2.40/30","2001:41D0:0:1F02::/64"])
         self.addSubnet(nodes=[gra_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.2.44/30","2001:41D0:0:1F03::/64"])
-        
+
         fra_1_border = self.addRouter("fra_5", config=RouterConfig)
         fra_5_border = self.addRouter("fra_6", config=RouterConfig)
         self.addLinks((fra_1_n7, fra_1_border), (fra_5_n7, fra_5_border))
@@ -223,13 +223,13 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[fra_5_n7, fra_5_border], subnets=["192.148.2.168/30","2001:41D0:0:0107::/64"])
         fra_1_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0106::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.165")])
         fra_5_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0107::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.169")])
-        
+
         set_rr(self, rr=fra_1_n7, peers=[fra_1_border])
         set_rr(self, rr=fra_5_n7, peers=[fra_5_border])
 
         # ================================================== END of Frankfurt =================================================
         # ================================================== START of Roubaix =================================================
-	
+
         rbx_g1_nc5 = self.addRouter("rbx_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0082::/128", "192.148.3.8/32"])
         rbx_g2_nc5 = self.addRouter("rbx_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0083::/128", "192.148.3.9/32"])
         self.addSubnet(nodes=[rbx_g1_nc5, rbx_g2_nc5], subnets=["192.148.2.48/30","2001:41D0:0:0001::/64"])
@@ -249,7 +249,7 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[par_gsw_sbb1_nc5, gra_g1_nc5], subnets=["192.148.2.76/30","2001:41D0:0:0004::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, gra_g2_nc5], subnets=["192.148.2.80/30","2001:41D0:0:0005::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, rbx_g1_nc5], subnets=["192.148.2.84/30","2001:41D0:0:0006::/64"])
-        
+
         par_gsw_border = self.addRouter("par_3", config=RouterConfig)
         par_th2_border = self.addRouter("par_4", config=RouterConfig)
         self.addLinks((par_gsw_sbb1_nc5, par_gsw_border), (par_th2_sbb1_nc5, par_th2_border))
@@ -257,10 +257,10 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[par_th2_sbb1_nc5, par_th2_border], subnets=["192.148.2.184/30","2001:41D0:0:0010::/64"])
         par_gsw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0009::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.181")])
         par_th2_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0010::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.185")])
-        
+
         set_rr(self, rr=par_gsw_sbb1_nc5, peers=[par_gsw_border])
         set_rr(self, rr=par_th2_sbb1_nc5, peers=[par_th2_border])
-        
+
         # =================================================== END of Paris ==================================================
 
         internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] + [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
@@ -280,11 +280,11 @@ class MyTopology(IPTopo):
         #        fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5,fra_1_n7,fra_5_n7,
         #        rbx_g1_nc5,rbx_g2_nc5,
         #        par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
-                
-        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0086::/128", "192.148.3.12/32"])       
+
+        MyServer1 = self.addRouter("ServOne", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0086::/128", "192.148.3.12/32"])
         MyServer2 = self.addRouter("ServTwo", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0087::/128","192.148.3.13/32"])
         MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0:00C0::/128", "192.148.1.0/32", "2001:41D0:0:0088::/128","192.148.3.14/32"])
-        
+
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
         MyServer1.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:0007::2"),StaticRoute("0.0.0.0/0", "192.148.0.2")])
         #self.addSubnet(nodes=[MyServer1, rbx_g2_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
@@ -360,7 +360,7 @@ class MyTopology(IPTopo):
         #self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860::/48","8.8.0.0/16"])
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
         #link_google_h1[google_r1].addParams(ip=("2001:4860:1:1::/64", "8.8.5.1/32"))
-        
+
         google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
         google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.1.6")])
         google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.1.10")])
@@ -371,7 +371,7 @@ class MyTopology(IPTopo):
         self.addAS(15169,routers=google_border_routers + [google_int])
         #self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
         self.addLinks((par_gsw_border, google_r1), (fra_5_border, google_r3), (par_th2_border, google_r2))
-        
+
         #self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
         #self.addSubnet(nodes=[fra_5_n7,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
         #self.addSubnet(nodes=[par_th2_sbb1_nc5,google_r2], subnets=["2001:41D0:0:1F0A::/64", "192.148.2.96/30"])
