@@ -320,84 +320,161 @@ class MyTopology(IPTopo):
         vodafone_r2=self.addRouter("voda_r2",config=RouterConfig,lo_addresses=["2001:5000:0:2::/64","2.16.35.2/32"])
         vodafone_r3=self.addRouter("voda_r3",config=RouterConfig,lo_addresses=["2001:5000:0:3::/64","2.16.35.3/32"])
         vodafone_r4=self.addRouter("voda_r4",config=RouterConfig,lo_addresses=["2001:5000:0:4::/64","2.16.35.4/32"])
+        vodafone_border_routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4]
 
-        self.addAS(1273,routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
+        vodafone_int=self.addRouter("voda_int",config=RouterConfig,lo_addresses=["2001:5000:0:5::/128","2.16.35.5/32"])
+        vodafone_h1=self.addHost("voda_h1")
+
+        self.addLinks((vodafone_int,vodafone_r1),
+                        (vodafone_int,vodafone_r2),
+                        (vodafone_int,vodafone_r3),
+                        (vodafone_int,vodafone_r4),
+                        (vodafone_int,vodafone_h1))
+
+        self.addSubnet(nodes=[vodafone_r1,vodafone_int],subnets=["2001:5000:1:1::/64","2.16.30.0/24"])
+        self.addSubnet(nodes=[vodafone_r2,vodafone_int],subnets=["2001:5000:1:2::/64","2.16.31.0/24"])
+        self.addSubnet(nodes=[vodafone_r3,vodafone_int],subnets=["2001:5000:1:3::/64","2.16.32.0/24"])
+        self.addSubnet(nodes=[vodafone_r4,vodafone_int],subnets=["2001:5000:1:4::/64","2.16.33.0/24"])
+        self.addSubnet(nodes=[vodafone_int,vodafone_h1],subnets=["2001:5000:1:5::/64","2.16.34.0/24"])
+
+        vodafone_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:1::2"),StaticRoute("2.16.0.0/16","2.16.30.2")])
+        vodafone_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:2::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
+        vodafone_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:3::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
+        vodafone_r4.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:4::2"),StaticRoute("2.16.0.0/16","2.16.34.2")])
+
+        self.addiBGPFullMesh(1272,routers=vodafone_border_routers+[vodafone_int])
+        self.addAS(1272,routers=vodafone_border_routers+[vodafone_int])
+
         self.addLinks((par_th2_sbb1_nc5,vodafone_r2),(fra_5_n7,vodafone_r4),(fra_1_n7,vodafone_r3),(par_gsw_sbb1_nc5,vodafone_r1))
-        '''self.addLink(vodafone_r1,vodafone_r2,igp_cost=2000)
-        self.addLink(vodafone_r2,vodafone_r3,igp_cost=2000)
-        self.addLink(vodafone_r3,vodafone_r4,igp_cost=2000)
-        self.addLink(vodafone_r4,vodafone_r1,igp_cost=2000)
-        self.addLink(vodafone_r2,vodafone_r4,igp_cost=2000)
-        self.addiBGPFullMesh(1273,routers=[vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
-        '''
+
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,vodafone_r1], subnets=["192.148.2.112/30", "2001:41D0:0:1F0E::/64"])
         self.addSubnet(nodes=[fra_1_n7,vodafone_r3], subnets=["192.148.2.108/30", "2001:41D0:0:1F0D::/64"])
         self.addSubnet(nodes=[fra_5_n7,vodafone_r4], subnets=["192.148.2.104/30", "2001:41D0:0:1F0C::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5,vodafone_r2], subnets=["192.148.2.100/30", "2001:41D0:0:1F0B::/64"])
+
         ebgp_session(self,par_th2_sbb1_nc5,vodafone_r2)
         ebgp_session(self,fra_5_n7,vodafone_r4 )
         ebgp_session(self,fra_1_n7,vodafone_r3 )
         ebgp_session(self,par_gsw_sbb1_nc5,vodafone_r1 )
 
-        self.setup_border_routers([vodafone_r1,vodafone_r2,vodafone_r3,vodafone_r4])
+        self.setup_border_routers(vodafone_border_routers)
+        self.setup_internal_routers([vodafone_int])
+
+        '''********************************************************************************'''
 
         cogent_r1=self.addRouter("cogent_r1",config=RouterConfig,lo_addresses=["2001:550:0:1::/64","2.58.4.1/32"])
         cogent_r2=self.addRouter("cogent_r2",config=RouterConfig,lo_addresses=["2001:550:0:2::/64","2.58.4.2/32"])
         cogent_r3=self.addRouter("cogent_r3",config=RouterConfig,lo_addresses=["2001:550:0:3::/64","2.58.4.3/32"])
-        self.addAS(174,routers=[cogent_r1,cogent_r2,cogent_r3])
+
+        cogent_border_routers=[cogent_r1,cogent_r2,cogent_r3]
+
+        cogent_int=self.addRouter("cogent_int",config=RouterConfig,lo_addresses=["2001:550:0:4::/128","2.58.4.4/32"])
+        cogent_h1=self.addHost("cogent_h1")
+
+        self.addLinks((cogent_int,cogent_r1),
+                        (cogent_int,cogent_r2),
+                        (cogent_int,cogent_r3),
+                        (cogent_h1,cogent_int))
+
+
+        self.addSubnet(nodes=[cogent_r1, cogent_int], subnets=["2001:550:1:1::/64","2.58.5.0/24"])
+        self.addSubnet(nodes=[cogent_r2, cogent_int], subnets=["2001:550:1:2::/64","2.58.6.0/24"])
+        self.addSubnet(nodes=[cogent_r3, cogent_int], subnets=["2001:550:1:3::/64","2.58.7.0/24"])
+        self.addSubnet(nodes=[cogent_int, cogent_h1], subnets=["2001:550:1:4::/64","2.58.8.0/24"])
+
+        cogent_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:1::2"),StaticRoute("2.58.0.0/16", "2.58.5.2")])
+        cogent_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:2::2"),StaticRoute("2.58.0.0/16", "2.58.6.2")])
+        cogent_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:3::2"),StaticRoute("2.58.0.0/16", "2.58.7.2")])
+
+        self.addiBGPFullMesh(174,routers=cogent_border_routers+[cogent_int])
+        self.addAS(174,routers=cogent_border_routers+[cogent_int])
+
         self.addLinks((par_gsw_sbb1_nc5,cogent_r1),(lon_thw_sbb1_nc5,cogent_r3),(par_th2_sbb1_nc5,cogent_r2))
-        '''
-        self.addLink(cogent_r1,cogent_r2,igp_cost=2000)
-        self.addLink(cogent_r2,cogent_r3,igp_cost=2000)
-        self.addLink(cogent_r3,cogent_r1,igp_cost=2000)
-        self.addiBGPFullMesh(174,routers=[cogent_r1,cogent_r2,cogent_r3])
-        '''
+
         self.addSubnet(nodes=[par_th2_sbb1_nc5,cogent_r2], subnets=["192.148.2.124/30", "2001:41D0:0:1F11::/64"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5,cogent_r3], subnets=["192.148.2.120/30", "2001:41D0:0:1F10::/64"])
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,cogent_r1], subnets=["192.148.2.116/30", "2001:41D0:0:1F0F::/64"])
+
         ebgp_session(self,par_gsw_sbb1_nc5,cogent_r1 )
         ebgp_session(self,lon_thw_sbb1_nc5,cogent_r3 )
         ebgp_session(self,par_th2_sbb1_nc5,cogent_r2 )
 
-        self.setup_border_routers([cogent_r1,cogent_r2,cogent_r3])
+        self.setup_border_routers(cogent_border_routers)
+        self.setup_internal_routers([cogent_int])
 
+        '''********************************************************************************'''
 
         telia_r1=self.addRouter("telia_r1",config=RouterConfig,lo_addresses=["2001:2000:0:1::/64","2.255.248.1/32"])
         telia_r2=self.addRouter("telia_r2",config=RouterConfig,lo_addresses=["2001:2000:0:2::/64","2.255.248.2/32"])
         telia_r3=self.addRouter("telia_r3",config=RouterConfig,lo_addresses=["2001:2000:0:3::/64","2.255.248.3/32"])
+        telia_border_routers=[telia_r1,telia_r2,telia_r3]
 
-        self.addAS(1299,routers=[telia_r1,telia_r2,telia_r3])
+        telia_int=self.addRouter("telia_int",config=RouterConfig,lo_addresses=["2001:2000:0:4::/128","2.255.248.4/32"])
+        telia_h1=self.addHost("telia_h1")
+
+        self.addLinks((telia_r1,telia_int),
+                        (telia_r2,telia_int),
+                        (telia_r3,telia_int),
+                        (telia_int, telia_h1))
+
+        self.addSubnet(nodes=[telia_r1, telia_int], subnets=["2001:2000:1:1::/64","2.255.1.0/24"])
+        self.addSubnet(nodes=[telia_r2, telia_int], subnets=["2001:2000:1:2::/64","2.255.2.0/24"])
+        self.addSubnet(nodes=[telia_r3, telia_int], subnets=["2001:2000:1:3::/64","2.255.3.0/24"])
+        self.addSubnet(nodes=[telia_int, telia_h1], subnets=["2001:2000:1:4::/64","2.255.4.0/24"])
+
+        telia_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:1::2"),StaticRoute("2.255.0.0/16", "2.255.1.2")])
+        telia_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:2::2"),StaticRoute("2.255.0.0/16", "2.255.2.2")])
+        telia_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:3::2"),StaticRoute("2.255.0.0/16", "2.255.3.2")])
+
+        self.addiBGPFullMesh(1299, routers=telia_border_routers+[telia_int])
+
+        self.addAS(1299,routers=telia_border_routers+[telia_int])
         self.addLinks((fra_5_n7,telia_r2),(fra_1_n7,telia_r1),(lon_thw_sbb1_nc5,telia_r3))
-        '''self.addLink(telia_r1,telia_r2,igp_cost=2000)
-        self.addLink(telia_r2,telia_r3,igp_cost=2000)
-        self.addLink(telia_r3,telia_r1,igp_cost=2000)
-        self.addiBGPFullMesh(1299,routers=[telia_r1,telia_r2,telia_r3])
-        '''
+
         self.addSubnet(nodes=[fra_5_n7,telia_r2], subnets=["192.148.2.128/30", "2001:41D0:0:1F12::/64"])
         self.addSubnet(nodes=[fra_1_n7,telia_r1], subnets=["192.148.2.132/30", "2001:41D0:0:1F13::/64"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5,telia_r3], subnets=["192.148.2.136/30", "2001:41D0:0:1F14::/64"])
+
         ebgp_session(self,fra_5_n7,telia_r2 )
         ebgp_session(self,fra_1_n7,telia_r1 )
         ebgp_session(self,lon_thw_sbb1_nc5,telia_r3 )
 
-        self.setup_border_routers([telia_r1,telia_r2,telia_r3])
+        self.setup_border_routers(telia_border_routers)
+        self.setup_internal_routers([telia_int])
+
+        '''********************************************************************************'''
+
+        amazon_r1=self.addRouter("amazon_r1",config=RouterConfig,lo_addresses=["2001:4f8:0:1::/64","3.5.128.1/32"])
+        amazon_r2=self.addRouter("amazon_r2",config=RouterConfig,lo_addresses=["2001:4f8:0:2::/64","3.5.128.2/32"])
+        amazon_border_routers=[amazon_r1,amazon_r2]
+
+        amazon_int=self.addRouter("amazon_int",config=RouterConfig,lo_addresses=["2001:4f8:0:4::/128","3.5.128.4/32"])
+        amazon_h1=self.addHost("amazon_h1")
+
+        self.addLinks((amazon_int,amazon_r1),
+                        (amazon_int,amazon_r2),
+                        (amazon_h1,amazon_int))
 
 
-        amazon_r1=self.addRouter("amazon_r1",config=RouterConfig,lo_addresses=["2001:4f8:b:0:1::/64","3.5.128.1/32"])
-        amazon_r2=self.addRouter("amazon_r2",config=RouterConfig,lo_addresses=["2001:4f8:b:0:2::/64","3.5.128.2/32"])
-        self.addAS(16509,routers=[amazon_r1,amazon_r2])
+        self.addSubnet(nodes=[amazon_r1,amazon_int], subnets=["2001:4f8:1:1::/64","3.5.1.0/24"])
+        self.addSubnet(nodes=[amazon_r2,amazon_int], subnets=["2001:4f8:1:2::/64","3.5.2.0/24"])
+        self.addSubnet(nodes=[amazon_int,amazon_h1], subnets=["2001:4f8:1:3::/64","3.5.3.0/24"])
+
+        amazon_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8:1::/48", "2001:4f8:1:1::2"),StaticRoute("3.5.0.0/16", "3.5.1.2")])
+        amazon_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8:1::/48", "2001:4f8:1:2::2"),StaticRoute("3.5.0.0/16", "3.5.2.2")])
+
+        self.addiBGPFullMesh(16509,routers=amazon_border_routers+[amazon_int])
+
+        self.addAS(16509,routers=amazon_border_routers+[amazon_int])
         self.addLinks((lon_thw_sbb1_nc5,amazon_r2),(par_th2_sbb1_nc5,amazon_r1))
-        '''self.addLink(amazon_r1,amazon_r2,igp_cost=2000)
-        self.addiBGPFullMesh(16509,routers=[amazon_r1,amazon_r2])
-        '''
 
         self.addSubnet(nodes=[par_th2_sbb1_nc5,amazon_r1], subnets=["192.148.2.140/30", "2001:41D0:0:1F15::/64"])
         self.addSubnet(nodes=[lon_thw_sbb1_nc5,amazon_r2], subnets=["192.148.2.144/30", "2001:41D0:0:1F16::/64"])
         ebgp_session(self,par_th2_sbb1_nc5,amazon_r1 )
         ebgp_session(self,lon_thw_sbb1_nc5,amazon_r2 )
 
-        self.setup_border_routers([amazon_r1,amazon_r2])#,vodafone,cogent,telia,amazon])
-
+        self.setup_border_routers(amazon_border_routers)#,vodafone,cogent,telia,amazon])
+        self.setup_internal_routers([amazon_int])
         '''********************   communities     **********************************'''
         #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
