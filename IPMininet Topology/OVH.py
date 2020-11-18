@@ -160,7 +160,7 @@ class MyTopology(IPTopo):
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(),AF_INET()))
-            r.get_config(BGP).deny(from_peer=all_routers, to_peer=all_routers, matching=[AccessList(entries=(AccessListEntry(prefix=ipaddress.ip_network(int_ipv4_prefix), action='permit'), AccessListEntry(prefix=ipaddress.ip_network(int_ipv6_prefix), action='permit')), )])
+            #r.get_config(BGP).deny(from_peer=all_routers, to_peer=all_routers, matching=[AccessList(entries=(AccessListEntry(prefix=ipaddress.ip_network(int_ipv4_prefix), action='permit'), AccessListEntry(prefix=ipaddress.ip_network(int_ipv6_prefix), action='permit')), )])
 
     def setup_servers(self, servers, routers):
         for s in servers:
@@ -191,6 +191,7 @@ class MyTopology(IPTopo):
         lon_thw_border.addDaemon(STATIC, static_routes=[StaticRoute(OVH_IPv6_prefix, "2001:41D0:0:0202::1"),StaticRoute(OVH_IPv4_prefix, "192.148.2.149")])
 
         set_rr(self, rr=lon_thw_sbb1_nc5, peers=[lon_thw_border])
+        #lon_thw_sbb1_nc5.get_config(BGP).set_community(community='no-advertise', from_peer=lon_thw_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ipaddress.ip_network("2001:4860::/32")))])
 
 	# =================================================== END of London ===================================================
 	# ================================================ START of Gravelines ================================================
@@ -229,6 +230,9 @@ class MyTopology(IPTopo):
 
         set_rr(self, rr=fra_1_n7, peers=[fra_1_border])
         set_rr(self, rr=fra_5_n7, peers=[fra_5_border])
+        
+        #fra_1_n7.get_config(BGP).set_community(community='no-advertise', from_peer=fra_1_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ipaddress.ip_network("2001:4860::/32")))])
+        #fra_5_n7.get_config(BGP).set_community(community='no-advertise', from_peer=fra_5_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ipaddress.ip_network("2001:4860::/32")))])
 
         # ================================================== END of Frankfurt =================================================
         # ================================================== START of Roubaix =================================================
@@ -265,7 +269,12 @@ class MyTopology(IPTopo):
 
         set_rr(self, rr=par_gsw_sbb1_nc5, peers=[par_gsw_border])
         set_rr(self, rr=par_th2_sbb1_nc5, peers=[par_th2_border])
-
+        ''''
+        par_gsw_sbb1_nc5.get_config(BGP).set_community(community='no-advertise', from_peer=par_gsw_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ))])
+        par_gsw_sbb1_nc5.get_config(BGP).set_community(community='no-advertise', from_peer=par_gsw_border, matching=[AccessList(entries=(ipaddress.ip_network("2001:4860::/32"), ))])
+        par_th2_sbb1_nc5.get_config(BGP).set_community(community='no-advertise', from_peer=par_th2_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ))])
+        par_th2_sbb1_nc5.get_config(BGP).set_community(community='no-advertise', from_peer=par_th2_border, matching=[AccessList(entries=(ipaddress.ip_network("2001:4860::/32"), ))])
+        '''
         # =================================================== END of Paris ==================================================
 
         internal_routers = [lon_drch_sbb1_nc5, gra_g1_nc5, gra_g2_nc5, fra_fr5_sbb1_nc5] + [lon_thw_sbb1_nc5, fra_1_n7, fra_5_n7, par_gsw_sbb1_nc5, par_th2_sbb1_nc5]
