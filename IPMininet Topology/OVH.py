@@ -3,10 +3,11 @@ import ipaddress
 from ipmininet.ipnet import IPNet
 from ipmininet.cli import IPCLI
 from ipmininet.iptopo import IPTopo
-from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF, STATIC, StaticRoute
+from ipmininet.router.config import Zebra, BGP, OSPF6, RouterConfig, AF_INET6,set_rr, ebgp_session, SHARE, CLIENT_PROVIDER, iBGPFullMesh, AF_INET, OSPF, STATIC, StaticRoute, IPTables, IP6Tables
 from ipmininet.router.config.ospf import OSPFRedistributedRoute
 from ipmininet.router.config.zebra import RouteMap
 from ipmininet.router.config.zebra import RouteMap, CommunityList, AccessList, AccessListEntry
+from ipmininet.router.config.iptables import ChainRule
 
 class MyTopology(IPTopo):
     """
@@ -108,20 +109,21 @@ class MyTopology(IPTopo):
     #    OSPFv3 and BGP. Add also a new host as3_h3 in a new lan 7ac0:d0d0:15:dead::/64 in one of the 4 routers.
     #    h1, h2 and h3 must reach each other. The iBGP sessions, this time, must be in
     #    full mesh configuration. AS3 will have only one eBGP peering with AS1 on the as1_s1 router.
-    
-    #curr_routerid=0
-    
+    def ovh_setup_routers(self, routers):
+        for r in routers:
+            r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
+            r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
+            r.addDaemon(BGP, address_families=(AF_INET6(redistribute=['static']),AF_INET(redistribute=['static'])))
+            r.get_config(BGP).deny(from_peer=routers, to_peer=routers, matching=[AccessList(entries=(AccessListEntry(prefix=ipaddress.ip_network('192.148.0.0/16'), action='permit'), AccessListEntry(prefix=ipaddress.ip_network('2001:41D0:0000::/48'), action='permit')), )])
+            
     def setup_routers(self, routers):
         for r in routers:
-            r.addDaemon(OSPF, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))#, routerid=self.curr_routerid)
-            #self.curr_routerid+=1
-            r.addDaemon(OSPF6, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
-            r.addDaemon(BGP, debug=('event',),address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+            r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
+            r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
+            r.addDaemon(BGP, address_families=(AF_INET6(redistribute=['static']),AF_INET(redistribute=['static'])))
     def setup_servers(self, servers):
         for s in servers:
-            #s.addDaemon(OSPF, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
-            #s.addDaemon(OSPF6, debug=('event',), redistribute=(OSPFRedistributedRoute('connected'),))
-            s.addDaemon(BGP, debug=('event',),address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
+            s.addDaemon(BGP, address_families=(AF_INET6(redistribute=['connected']),AF_INET(redistribute=['connected'])))
     
 
     def build(self, *args, **kwargs):
@@ -151,6 +153,7 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[fra_5_n7, fra_fr5_sbb2_nc5], subnets=["192.148.2.36/30","2001:41D0:0:0105::/64"])
         self.addSubnet(nodes=[gra_g1_nc5, fra_fr5_sbb1_nc5], subnets=["192.148.2.40/30","2001:41D0:0:1F02::/64"])
         self.addSubnet(nodes=[gra_g2_nc5, fra_fr5_sbb2_nc5], subnets=["192.148.2.44/30","2001:41D0:0:1F03::/64"])
+        fra_5_n7.addDaemon(STATIC, static_routes=[StaticRoute("2001:41D0:0000::/48", "2001:41D0:0:0105::2"),StaticRoute("192.148.0.0/16", "192.148.2.38")])
 
         rbx_g1_nc5 = self.addRouter("rbx_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0082::/128", "192.148.3.8/32"])
         rbx_g2_nc5 = self.addRouter("rbx_2", config=RouterConfig, lo_addresses=["2001:41D0:0000:0083::/128", "192.148.3.9/32"])
@@ -167,6 +170,8 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[par_gsw_sbb1_nc5, gra_g1_nc5], subnets=["192.148.2.76/30","2001:41D0:0:0004::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, gra_g2_nc5], subnets=["192.148.2.80/30","2001:41D0:0:0005::/64"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5, rbx_g1_nc5], subnets=["192.148.2.84/30","2001:41D0:0:0006::/64"])
+        par_gsw_sbb1_nc5.addDaemon(STATIC, static_routes=[StaticRoute("2001:41D0:0000::/48", "2001:41D0:0:0003::2"),StaticRoute("192.148.0.0/16", "192.148.2.74")])
+        par_th2_sbb1_nc5.addDaemon(STATIC, static_routes=[StaticRoute("2001:41D0:0000::/48", "2001:41D0:0:0006::2"),StaticRoute("192.148.0.0/16", "192.148.2.86")])
 
         routers = [lon_thw_sbb1_nc5,lon_drch_sbb1_nc5,
                 gra_g1_nc5, gra_g2_nc5,
@@ -174,7 +179,7 @@ class MyTopology(IPTopo):
                 rbx_g1_nc5,rbx_g2_nc5,
                 par_gsw_sbb1_nc5,par_th2_sbb1_nc5]
 
-        self.setup_routers(routers)
+        self.ovh_setup_routers(routers)
 
 
         # adding BGP and OSPF as IGP
@@ -190,16 +195,16 @@ class MyTopology(IPTopo):
         MyServer3 = self.addRouter("ServThree", config=RouterConfig, lo_addresses=["2001:41D0:0000:00C0::/128", "192.148.1.0/32","192.148.3.14/32"])
         
         self.addSubnet(nodes=[MyServer1, rbx_g1_nc5], subnets=["192.148.0.0/30","2001:41D0:0:0007::/64"])
-        MyServer1.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:0007::2"),StaticRoute("0.0.0.0/0", "192.148.3.8")])
+        MyServer1.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:0007::2"),StaticRoute("0.0.0.0/0", "192.148.0.2")])
         #self.addSubnet(nodes=[MyServer1, rbx_g2_nc5], subnets=["192.148.0.4/30","2001:41D0:0:0008::/64"])
 
         #self.addSubnet(nodes=[MyServer2, rbx_g1_nc5], subnets=["192.148.0.8/30","2001:41D0:0:0009::/64"])
         self.addSubnet(nodes=[MyServer2, rbx_g2_nc5], subnets=["192.148.0.12/30","2001:41D0:0:000A::/64"])
-        MyServer2.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000A::2"),StaticRoute("0.0.0.0/0", "192.148.3.9")])
+        MyServer2.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000A::2"),StaticRoute("0.0.0.0/0", "192.148.0.14")])
 
         #self.addSubnet(nodes=[MyServer3, fra_fr5_sbb1_nc5], subnets=["192.148.0.16/30","2001:41D0:0:000B::/64"])
         self.addSubnet(nodes=[MyServer3, fra_fr5_sbb2_nc5], subnets=["192.148.0.20/30","2001:41D0:0:000C::/64"])
-        MyServer3.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000C::2"),StaticRoute("0.0.0.0/0", "192.148.3.5")])
+        MyServer3.addDaemon(STATIC, static_routes=[StaticRoute("::/0", "2001:41D0:0:000C::2"),StaticRoute("0.0.0.0/0", "192.148.0.22")])
 
         servers = [MyServer1, MyServer2, MyServer3]
 
@@ -207,7 +212,9 @@ class MyTopology(IPTopo):
         self.addLinks((MyServer1, rbx_g1_nc5),# (MyServer1, rbx_g2_nc5),
                       (MyServer2, rbx_g2_nc5),# (MyServer2, rbx_g1_nc5),
                       (MyServer3, fra_fr5_sbb2_nc5))#, (MyServer3, fra_fr5_sbb1_nc5))#
-
+        rbx_g1_nc5.get_config(BGP).set_community(community='no-export', from_peer=MyServer1)
+        rbx_g2_nc5.get_config(BGP).set_community(community='no-export', from_peer=MyServer2)
+        fra_fr5_sbb2_nc5.get_config(BGP).set_community(community='no-export', from_peer=MyServer3)
 
         set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer2])#, MyServer1])#
         set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer1])#, MyServer2])#
@@ -225,9 +232,12 @@ class MyTopology(IPTopo):
         google_r1=self.addRouter("google_r1",config=RouterConfig,lo_addresses=["2001:4860:0:1::/64","8.8.4.1/32"])
         google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/64","8.8.4.2/32"])
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/64","8.8.4.3/32"])
-        self.addAS(15169,routers=[google_r1,google_r2,google_r3])
-        self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))
-
+        google_h1=self.addHost("google_h1")
+        self.addAS(15169,routers=[google_r1,google_r2,google_r3, google_h1])
+        self.addLinks((google_h1,google_r1),(par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))
+        
+        google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860::/32", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.0.2")])
+        self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860:1:1::/64","8.8.0.0/30"])
         self.addSubnet(nodes=[par_gsw_sbb1_nc5,google_r1], subnets=["2001:41D0:0:1F08::/64","192.148.2.88/30"])
         self.addSubnet(nodes=[fra_5_n7,google_r3], subnets=["2001:41D0:0:1F09::/64","192.148.2.92/30"])
         self.addSubnet(nodes=[par_th2_sbb1_nc5,google_r2], subnets=["2001:41D0:0:1F0A::/64", "192.148.2.96/30"])
