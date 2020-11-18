@@ -155,12 +155,12 @@ class MyTopology(IPTopo):
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(),AF_INET()))
 
-    def setup_internal_routers(self, routers):
+    def setup_internal_routers(self, routers, int_ipv4_prefix, int_ipv6_prefix, all_routers):
         for r in routers:
             r.addDaemon(OSPF, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(OSPF6, redistribute=(OSPFRedistributedRoute('connected'),))
             r.addDaemon(BGP, address_families=(AF_INET6(),AF_INET()))
-            r.get_config(BGP).deny(from_peer=routers, to_peer=routers, matching=[AccessList(entries=(AccessListEntry(prefix=ipaddress.ip_network('192.148.0.0/16'), action='permit'), AccessListEntry(prefix=ipaddress.ip_network('2001:41D0:0000::/48'), action='permit')), )])
+            r.get_config(BGP).deny(from_peer=all_routers, to_peer=all_routers, matching=[AccessList(entries=(AccessListEntry(prefix=ipaddress.ip_network(int_ipv4_prefix), action='permit'), AccessListEntry(prefix=ipaddress.ip_network(int_ipv6_prefix), action='permit')), )])
 
     def setup_servers(self, servers, routers):
         for s in servers:
@@ -274,7 +274,7 @@ class MyTopology(IPTopo):
 
         server_routers = [fra_fr5_sbb2_nc5, rbx_g1_nc5, rbx_g2_nc5]
 
-        self.setup_internal_routers(internal_routers)
+        self.setup_internal_routers(internal_routers, '192.148.0.0/16', '2001:41D0:0000::/48', internal_routers+border_routers+server_routers)
         self.setup_server_routers(server_routers)
         self.setup_border_routers(border_routers)
 
@@ -368,9 +368,9 @@ class MyTopology(IPTopo):
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
         #link_google_h1[google_r1].addParams(ip=("2001:4860:1:1::/64", "8.8.5.1/32"))
 
-        google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
-        google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.1.6")])
-        google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860:1::/48", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.1.10")])
+        google_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860::/32", "2001:4860:1:1::2"),StaticRoute("8.8.0.0/16", "8.8.1.2")])
+        google_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860::/32", "2001:4860:1:2::2"),StaticRoute("8.8.0.0/16", "8.8.1.6")])
+        google_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:4860::/32", "2001:4860:1:3::2"),StaticRoute("8.8.0.0/16", "8.8.1.10")])
         self.addiBGPFullMesh(15169, routers=[google_r1, google_int, google_r2, google_r3])
         #self.addiBGPFullMesh(15169, routers=[google_r2, google_i2])
         #self.addiBGPFullMesh(15169, routers=[google_r3, google_i3])
@@ -393,7 +393,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,fra_5_border,google_r3)
         ebgp_session(self,par_th2_border,google_r2)
 
-        self.setup_internal_routers([google_int])
+        self.setup_internal_routers([google_int], '8.8.0.0/16', '2001:4860::/32', google_border_routers)
         self.setup_border_routers(google_border_routers)
 
         '''********************************************************************************'''
@@ -419,10 +419,10 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[vodafone_r4,vodafone_int],subnets=["2001:5000:1:4::/64","2.16.33.0/24"])
         self.addSubnet(nodes=[vodafone_int,vodafone_h1],subnets=["2001:5000:1:5::/64","2.16.34.0/24"])
 
-        vodafone_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:1::2"),StaticRoute("2.16.0.0/16","2.16.30.2")])
-        vodafone_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:2::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
-        vodafone_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:3::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
-        vodafone_r4.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000:1::/48","2001:5000:1:4::2"),StaticRoute("2.16.0.0/16","2.16.34.2")])
+        vodafone_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:1::2"),StaticRoute("2.16.0.0/16","2.16.30.2")])
+        vodafone_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:2::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
+        vodafone_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:3::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
+        vodafone_r4.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:4::2"),StaticRoute("2.16.0.0/16","2.16.34.2")])
 
         self.addiBGPFullMesh(1272,routers=vodafone_border_routers+[vodafone_int])
         self.addAS(1272,routers=vodafone_border_routers+[vodafone_int])
@@ -440,7 +440,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,par_gsw_border,vodafone_r1 )
 
         self.setup_border_routers(vodafone_border_routers)
-        self.setup_internal_routers([vodafone_int])
+        self.setup_internal_routers([vodafone_int], '2.16.0.0/16', '2001:5000::/32', vodafone_border_routers)
 
         '''********************************************************************************'''
 
@@ -464,9 +464,9 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[cogent_r3, cogent_int], subnets=["2001:550:1:3::/64","2.58.7.0/24"])
         self.addSubnet(nodes=[cogent_int, cogent_h1], subnets=["2001:550:1:4::/64","2.58.8.0/24"])
 
-        cogent_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:1::2"),StaticRoute("2.58.0.0/16", "2.58.5.2")])
-        cogent_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:2::2"),StaticRoute("2.58.0.0/16", "2.58.6.2")])
-        cogent_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:550:1::/48", "2001:550:1:3::2"),StaticRoute("2.58.0.0/16", "2.58.7.2")])
+        cogent_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:550::/32", "2001:550:1:1::2"),StaticRoute("2.58.0.0/16", "2.58.5.2")])
+        cogent_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:550::/32", "2001:550:1:2::2"),StaticRoute("2.58.0.0/16", "2.58.6.2")])
+        cogent_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:550::/32", "2001:550:1:3::2"),StaticRoute("2.58.0.0/16", "2.58.7.2")])
 
         self.addiBGPFullMesh(174,routers=cogent_border_routers+[cogent_int])
         self.addAS(174,routers=cogent_border_routers+[cogent_int])
@@ -482,7 +482,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,par_th2_border,cogent_r2 )
 
         self.setup_border_routers(cogent_border_routers)
-        self.setup_internal_routers([cogent_int])
+        self.setup_internal_routers([cogent_int], '2.58.0.0/16', '2001:550::/32', cogent_border_routers)
 
         '''********************************************************************************'''
 
@@ -504,9 +504,9 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[telia_r3, telia_int], subnets=["2001:2000:1:3::/64","2.255.3.0/24"])
         self.addSubnet(nodes=[telia_int, telia_h1], subnets=["2001:2000:1:4::/64","2.255.4.0/24"])
 
-        telia_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:1::2"),StaticRoute("2.255.0.0/16", "2.255.1.2")])
-        telia_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:2::2"),StaticRoute("2.255.0.0/16", "2.255.2.2")])
-        telia_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000:1::/48", "2001:4860:1:3::2"),StaticRoute("2.255.0.0/16", "2.255.3.2")])
+        telia_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000::/32", "2001:4860:1:1::2"),StaticRoute("2.255.0.0/16", "2.255.1.2")])
+        telia_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000::/32", "2001:4860:1:2::2"),StaticRoute("2.255.0.0/16", "2.255.2.2")])
+        telia_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:2000::/32", "2001:4860:1:3::2"),StaticRoute("2.255.0.0/16", "2.255.3.2")])
 
         self.addiBGPFullMesh(1299, routers=telia_border_routers+[telia_int])
 
@@ -522,7 +522,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,lon_thw_border,telia_r3 )
 
         self.setup_border_routers(telia_border_routers)
-        self.setup_internal_routers([telia_int])
+        self.setup_internal_routers([telia_int], '2.255.0.0/16', '2001:2000::/32', telia_border_routers)
 
         '''********************************************************************************'''
 
@@ -542,8 +542,8 @@ class MyTopology(IPTopo):
         self.addSubnet(nodes=[amazon_r2,amazon_int], subnets=["2001:4f8:1:2::/64","3.5.2.0/24"])
         self.addSubnet(nodes=[amazon_int,amazon_h1], subnets=["2001:4f8:1:3::/64","3.5.3.0/24"])
 
-        amazon_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8:1::/48", "2001:4f8:1:1::2"),StaticRoute("3.5.0.0/16", "3.5.1.2")])
-        amazon_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8:1::/48", "2001:4f8:1:2::2"),StaticRoute("3.5.0.0/16", "3.5.2.2")])
+        amazon_r1.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8::/32", "2001:4f8:1:1::2"),StaticRoute("3.5.0.0/16", "3.5.1.2")])
+        amazon_r2.addDaemon(STATIC, static_routes=[StaticRoute("2001:4f8::/32", "2001:4f8:1:2::2"),StaticRoute("3.5.0.0/16", "3.5.2.2")])
 
         self.addiBGPFullMesh(16509,routers=amazon_border_routers+[amazon_int])
 
@@ -556,7 +556,7 @@ class MyTopology(IPTopo):
         ebgp_session(self,lon_thw_border,amazon_r2 )
 
         self.setup_border_routers(amazon_border_routers)#,vodafone,cogent,telia,amazon])
-        self.setup_internal_routers([amazon_int])
+        self.setup_internal_routers([amazon_int], '3.5.0.0/16', '2001:4f8::/32', amazon_border_routers)
         '''********************   communities     **********************************'''
         #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
