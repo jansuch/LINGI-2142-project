@@ -424,8 +424,8 @@ class MyTopology(IPTopo):
         vodafone_r3.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:3::2"),StaticRoute("2.16.0.0/16","2.16.32.2")])
         vodafone_r4.addDaemon(STATIC, static_routes=[StaticRoute("2001:5000::/32","2001:5000:1:4::2"),StaticRoute("2.16.0.0/16","2.16.34.2")])
 
-        self.addiBGPFullMesh(1272,routers=vodafone_border_routers+[vodafone_int])
-        self.addAS(1272,routers=vodafone_border_routers+[vodafone_int])
+        self.addiBGPFullMesh(1273,routers=vodafone_border_routers+[vodafone_int])
+        self.addAS(1273,routers=vodafone_border_routers+[vodafone_int])
 
         self.addLinks((par_th2_border,vodafone_r2),(fra_5_border,vodafone_r4),(fra_1_border,vodafone_r3),(par_gsw_border,vodafone_r1))
 
@@ -561,78 +561,78 @@ class MyTopology(IPTopo):
         #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
         '''
-        lon_thw_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3, matching=(all_al,))
-        lon_thw_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3, matching=(all_al,))
-        lon_thw_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2, matching=(all_al,))
+        lon_thw_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3)
+        lon_thw_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3)
+        lon_thw_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2)
 
-        fra_1_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r3, matching=(all_al,))
-        fra_1_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r1, matching=(all_al,))
+        fra_1_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r3)
+        fra_1_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r1)
 
-        fra_5_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r3, matching=(all_al,))
-        fra_5_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r4, matching=(all_al,))
-        fra_5_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r2, matching=(all_al,))
+        fra_5_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r3)
+        fra_5_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r4)
+        fra_5_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r2)
 
-        par_gsw_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r1, matching=(all_al,))
-        par_gsw_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r1, matching=(all_al,))
-        par_gsw_border.get_config(BGP).set_community(community='16276:2010', from_peer=vodafone_r1, matching=(all_al,))
+        par_gsw_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r1)
+        par_gsw_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r1)
+        par_gsw_border.get_config(BGP).set_community(community='16276:2010', from_peer=vodafone_r1)
 
-        par_th2_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r2, matching=(all_al,))
-        par_th2_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2, matching=(all_al,))
-        par_th2_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1, matching=(all_al,))
-        par_th2_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2, matching=(all_al,))
+        par_th2_border.get_config(BGP).set_community(community='16276:2040', from_peer=google_r2)
+        par_th2_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2)
+        par_th2_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1)
+        par_th2_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2)
         '''
         '''********************   Learn from     **********************************'''
         '''
-        lon_thw_border.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2],matching=(all_al,))
-        fra_1_border.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1],matching=(all_al,))
-        fra_5_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r4,telia_r2],matching=(all_al,))
-        par_gsw_border.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1],matching=(all_al,))
-        par_th2_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2],matching=(all_al,))
+        lon_thw_border.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2])
+        fra_1_border.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1])
+        fra_5_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r4,telia_r2])
+        par_gsw_border.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1])
+        par_th2_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2])
         '''
         '''********************   ROUTE POLICIES     **********************************'''
         '''______________: this part was not implemented because of routemap issues, for more information see the report. (deny and permit does not work, no route map applied <=> error)'''
         '''
-        lon_thw_border.get_config(BGP).deny(to_peer=[telia_r3],matching=[CommunityList(community='16276:2010')])
-        lon_thw_border.get_config(BGP).deny(to_peer=[cogent_r3],matching=[CommunityList(community='16276:2020')])
-        lon_thw_border.get_config(BGP).deny(to_peer=[amazon_r2],matching=[CommunityList(community='16276:2050')])
+        lon_thw_border.get_config(BGP).deny(to_peer=telia_r3,matching=[CommunityList(community='16276:2010')])
+        lon_thw_border.get_config(BGP).deny(to_peer=cogent_r3,matching=[CommunityList(community='16276:2020')])
+        lon_thw_border.get_config(BGP).deny(to_peer=amazon_r2,matching=[CommunityList(community='16276:2050')])
 
-        fra_1_n7.get_config(BGP).deny(to_peer=[vodafone_r3],matching=[CommunityList(community='16276:2030')])
-        fra_1_n7.get_config(BGP).deny(to_peer=[telia_r1],matching=[CommunityList(community='16276:2010')])
+        fra_1_n7.get_config(BGP).deny(to_peer=vodafone_r3,matching=[CommunityList(community='16276:2030')])
+        fra_1_n7.get_config(BGP).deny(to_peer=telia_r1,matching=[CommunityList(community='16276:2010')])
 
-        fra_5_n7.get_config(BGP).deny(to_peer=[google_r3],matching=[CommunityList(community='16276:2040')])
-        fra_5_n7.get_config(BGP).deny(to_peer=[vodafone_r4],matching=[CommunityList(community='16276:2030')])
-        fra_5_n7.get_config(BGP).deny(to_peer=[telia_r2],matching=[CommunityList(community='16276:2030')])
+        fra_5_n7.get_config(BGP).deny(to_peer=google_r3,matching=[CommunityList(community='16276:2040')])
+        fra_5_n7.get_config(BGP).deny(to_peer=vodafone_r4,matching=[CommunityList(community='16276:2030')])
+        fra_5_n7.get_config(BGP).deny(to_peer=telia_r2,matching=[CommunityList(community='16276:2030')])
 
-        par_gsw_border.get_config(BGP).deny(to_peer=[cogent_r1],matching=[CommunityList(community='16276:2020')])
-        par_gsw_border.get_config(BGP).deny(to_peer=[google_r1],matching=[CommunityList(community='16276:2040')])
-        par_gsw_border.get_config(BGP).deny(to_peer=[vodafone_r1],matching=[CommunityList(community='16276:2030')])
+        par_gsw_border.get_config(BGP).deny(to_peer=cogent_r1,matching=[CommunityList(community='16276:2020')])
+        par_gsw_border.get_config(BGP).deny(to_peer=google_r1,matching=[CommunityList(community='16276:2040')])
+        par_gsw_border.get_config(BGP).deny(to_peer=vodafone_r1,matching=[CommunityList(community='16276:2030')])
 
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[google_r2],matching=[CommunityList(community='16276:2040')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[cogent_r2],matching=[CommunityList(community='16276:2020')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[amazon_r1],matching=[CommunityList(community='16276:2050')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=[vodafone_r2],matching=[CommunityList(community='16276:2030')])
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=google_r2,matching=[CommunityList(community='16276:2040')])
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=cogent_r2,matching=[CommunityList(community='16276:2020')])
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=amazon_r1,matching=[CommunityList(community='16276:2050')])
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=vodafone_r2,matching=[CommunityList(community='16276:2030')])
         '''
         '''********************   CUSTOM LOCAL-PREF     **********************************'''
-        '''
-        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
-        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
-        setlocalPrefs(lon_thw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
 
-        #setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=vodafone_r3,ipv4='2.16.35.3/32',ipv6='2001:5000:0:3::')
-        #setlocalPrefs(fra_1_n7,LOCAL_PREFS,fromPeer=telia_r1,ipv4='2.255.248.1/32',ipv6='2001:2000:0:1::')
+        '''setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
+        setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
+        setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
 
-        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=google_r3,ipv4='8.8.4.3/32',ipv6='2001:4860:0:3::')
-        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=vodafone_r4,ipv4='2.16.35.4/32',ipv6='2001:5000:0:4::')
-        #setlocalPrefs(fra_5_n7,LOCAL_PREFS,fromPeer=telia_r2,ipv4='2.255.248.2/32',ipv6='2001:2000:0:2::')
+        setlocalPrefs(fra_1_border,LOCAL_PREFS,fromPeer=vodafone_r3,ipv4='2.16.35.3/32',ipv6='2001:5000:0:3::')
+        setlocalPrefs(fra_1_border,LOCAL_PREFS,fromPeer=telia_r1,ipv4='2.255.248.1/32',ipv6='2001:2000:0:1::')
 
-        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r1,ipv4='2.58.4.1/32',ipv6='2001:550:0:1::/64')
-        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r1,ipv4='8.8.4.1/32',ipv6='2001:4860:0:1::/64')
-        #setlocalPrefs(par_gsw_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r1,ipv4='2.16.35.1/32',ipv6='2001:5000:0:1::/64')
+        setlocalPrefs(fra_5_border,LOCAL_PREFS,fromPeer=google_r3,ipv4='8.8.4.3/32',ipv6='2001:4860:0:3::')
+        setlocalPrefs(fra_5_border,LOCAL_PREFS,fromPeer=vodafone_r4,ipv4='2.16.35.4/32',ipv6='2001:5000:0:4::')
+        setlocalPrefs(fra_5_border,LOCAL_PREFS,fromPeer=telia_r2,ipv4='2.255.248.2/32',ipv6='2001:2000:0:2::')
 
-        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=google_r2,ipv6='2001:4860:0:1::',ipv4='8.8.4.2/32')
-        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=cogent_r2,ipv4='2.58.4.2/32',ipv6='2001:550:0:2::')
-        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=amazon_r1,ipv4='3.5.128.1/32',ipv6='2001:4f8:b:0:1::')
-        setlocalPrefs(par_th2_sbb1_nc5,LOCAL_PREFS,fromPeer=vodafone_r2,ipv4='2.16.35.2/32',ipv6='2001:5000:0:2::')
+        setlocalPrefs(par_gsw_border,LOCAL_PREFS,fromPeer=cogent_r1,ipv4='2.58.4.1/32',ipv6='2001:550:0:1::/64')
+        setlocalPrefs(par_gsw_border,LOCAL_PREFS,fromPeer=google_r1,ipv4='8.8.4.1/32',ipv6='2001:4860:0:1::/64')
+        setlocalPrefs(par_gsw_border,LOCAL_PREFS,fromPeer=vodafone_r1,ipv4='2.16.35.1/32',ipv6='2001:5000:0:1::/64')
+
+        setlocalPrefs(par_th2_border,LOCAL_PREFS,fromPeer=google_r2,ipv6='2001:4860:0:1::',ipv4='8.8.4.2/32')
+        setlocalPrefs(par_th2_border,LOCAL_PREFS,fromPeer=cogent_r2,ipv4='2.58.4.2/32',ipv6='2001:550:0:2::')
+        setlocalPrefs(par_th2_border,LOCAL_PREFS,fromPeer=amazon_r1,ipv4='3.5.128.1/32',ipv6='2001:4f8:b:0:1::')
+        setlocalPrefs(par_th2_border,LOCAL_PREFS,fromPeer=vodafone_r2,ipv4='2.16.35.2/32',ipv6='2001:5000:0:2::')
         '''
 
         self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
@@ -653,13 +653,13 @@ def setLocalPref(router,localPref,communityNbr,fromPeer,ipv4,ipv6):
         from_peer=fromPeer,
         matching=[
             CommunityList(community=communityNbr),
-            AccessList(entries=[AccessListEntry(prefix=ipaddress.IPv4Network(ipv4)),AccessListEntry(prefix=ipaddress.IPv6Network(ipv6))])
+            AccessList(entries=[ipv4,ipv6])
         ])
 
 def setlocalPrefs(router,localPrefCommList,fromPeer,ipv4,ipv6):
     all_al=AccessList('all',('any',))
-    router.get_config(BGP).permit(from_peer=fromPeer,matching=(all_al,))
-    router.get_config(BGP).permit(to_peer=fromPeer,matching=(all_al,))
+    router.get_config(BGP).permit(from_peer=fromPeer,matching=(all_al,)) #deault permit route
+    router.get_config(BGP).permit(to_peer=fromPeer,matching=(all_al,))  #deault permit route
     for e in localPrefCommList:
         setLocalPref(router,localPref=e[1],communityNbr=e[0],fromPeer=fromPeer,ipv4=ipv4,ipv6=ipv6)
 
