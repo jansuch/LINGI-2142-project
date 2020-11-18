@@ -328,10 +328,12 @@ class MyTopology(IPTopo):
 
         set_rr(self, rr=rbx_g2_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer2])#, MyServer1])#
         set_rr(self, rr=rbx_g1_nc5, peers=[par_gsw_sbb1_nc5, par_th2_sbb1_nc5,lon_thw_sbb1_nc5, lon_drch_sbb1_nc5, MyServer1])#, MyServer2])#
+        self.addiBGPFullMesh(16276, routers=[rbx_g1_nc5, rbx_g2_nc5])
         set_rr(self, rr=gra_g1_nc5, peers=[rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=gra_g2_nc5, peers=[rbx_g1_nc5, rbx_g2_nc5,fra_fr5_sbb1_nc5,fra_fr5_sbb2_nc5])
         set_rr(self, rr=fra_fr5_sbb1_nc5, peers=[fra_1_n7, fra_5_n7])#, MyServer3])#
         set_rr(self, rr=fra_fr5_sbb2_nc5, peers=[fra_1_n7, fra_5_n7, MyServer3])#
+        self.addiBGPFullMesh(16276, routers=[fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5])
 
         self.addiBGPFullMesh(16276, routers=[gra_g1_nc5, gra_g2_nc5])
         self.addAS(16276, routers=internal_routers+border_routers+server_routers+servers)
