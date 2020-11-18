@@ -560,7 +560,7 @@ class MyTopology(IPTopo):
         '''********************   communities     **********************************'''
         #google_r1.get_config(BGP).set_community(community='16276:7100',to_peer=par_gsw_sbb1_nc5)
         '''********************   NOT ANNOUNCED TO     **********************************'''
-        '''
+
         lon_thw_border.get_config(BGP).set_community(community='16276:2010', from_peer=telia_r3)
         lon_thw_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r3)
         lon_thw_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r2)
@@ -580,15 +580,16 @@ class MyTopology(IPTopo):
         par_th2_border.get_config(BGP).set_community(community='16276:2020', from_peer=cogent_r2)
         par_th2_border.get_config(BGP).set_community(community='16276:2050', from_peer=amazon_r1)
         par_th2_border.get_config(BGP).set_community(community='16276:2030', from_peer=vodafone_r2)
-        '''
+
         '''********************   Learn from     **********************************'''
-        '''
-        lon_thw_border.get_config(BGP).set_community(community='16276:100',from_peer=[telia_r3,cogent_r3,amazon_r2])
-        fra_1_border.get_config(BGP).set_community(community='16276:100',from_peer=[vodafone_r3,telia_r1])
-        fra_5_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r3,vodafone_r4,telia_r2])
-        par_gsw_border.get_config(BGP).set_community(community='16276:100',from_peer=[cogent_r1,google_r1,vodafone_r1])
-        par_th2_border.get_config(BGP).set_community(community='16276:100',from_peer=[google_r2,cogent_r2,amazon_r1,vodafone_r2])
-        '''
+        lon_thw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=lon_thw_border)
+        fra_1_n7.get_config(BGP).set_community(community='16276:100',from_peer=fra_1_border)
+        fra_5_n7.get_config(BGP).set_community(community='16276:100',from_peer=fra_5_border)
+        par_gsw_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=par_gsw_border)
+        par_th2_sbb1_nc5.get_config(BGP).set_community(community='16276:100',from_peer=par_th2_border)
+
+
+
         '''********************   ROUTE POLICIES     **********************************'''
         '''______________: this part was not implemented because of routemap issues, for more information see the report. (deny and permit does not work, no route map applied <=> error)'''
         '''
