@@ -116,6 +116,11 @@ class MyTopology(IPTopo):
             l[1].addParams(ospf_dead_int=40)
             l[1].addParams(ospf_hello_int=10)
             
+            l[0].addParams(ospf6_dead_int=40)
+            l[0].addParams(ospf6_hello_int=10)
+            l[1].addParams(ospf6_dead_int=40)
+            l[1].addParams(ospf6_hello_int=10)
+            
     def setup_border_routers(self, routers):
         bogon_ipv4_transit_filter = [TransitFilter(default="ACCEPT", rules=[
                         Deny(proto='all', src='0.0.0.0/8'),
@@ -660,16 +665,34 @@ class MyTopology(IPTopo):
         setlocalPrefs(par_th2_border,LOCAL_PREFS,fromPeer=vodafone_r2,ipv4='2.16.35.2/32',ipv6='2001:5000:0:2::')
         '''
 
-        all_links += self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5), (lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
-                                   (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
-                                   (gra_g1_nc5, gra_g2_nc5), (gra_g1_nc5, par_gsw_sbb1_nc5), (gra_g1_nc5, fra_fr5_sbb1_nc5),
-                                   (gra_g2_nc5, par_th2_sbb1_nc5), (gra_g2_nc5, fra_fr5_sbb2_nc5),
-                                   (fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5), (fra_fr5_sbb1_nc5, fra_1_n7), (fra_fr5_sbb1_nc5, fra_5_n7), (fra_fr5_sbb1_nc5, rbx_g1_nc5),
-                                   (fra_fr5_sbb2_nc5, fra_1_n7), (fra_fr5_sbb2_nc5, fra_5_n7), (fra_fr5_sbb2_nc5, rbx_g2_nc5),
+        all_links += self.addLinks((lon_thw_sbb1_nc5, lon_drch_sbb1_nc5),
+                                   (gra_g1_nc5, gra_g2_nc5), (gra_g1_nc5, par_gsw_sbb1_nc5),
+                                   (gra_g2_nc5, par_th2_sbb1_nc5),
+                                   (fra_fr5_sbb1_nc5, fra_fr5_sbb2_nc5), (fra_fr5_sbb1_nc5, fra_1_n7), (fra_fr5_sbb1_nc5, fra_5_n7),
+                                   (fra_fr5_sbb2_nc5, fra_1_n7), (fra_fr5_sbb2_nc5, fra_5_n7),
                                    (fra_1_n7, fra_5_n7),
                                    (rbx_g1_nc5, rbx_g2_nc5), (rbx_g1_nc5, par_th2_sbb1_nc5),
                                    (rbx_g2_nc5, par_gsw_sbb1_nc5),
                                    (par_gsw_sbb1_nc5, par_th2_sbb1_nc5))
+                                   
+        int_links = ((lon_thw_sbb1_nc5, gra_g1_nc5), (lon_thw_sbb1_nc5, rbx_g1_nc5),
+                                   (lon_drch_sbb1_nc5, gra_g2_nc5), (lon_drch_sbb1_nc5, rbx_g2_nc5),
+                                   (gra_g1_nc5, fra_fr5_sbb1_nc5),
+                                   (gra_g2_nc5, fra_fr5_sbb2_nc5),
+                                   (fra_fr5_sbb1_nc5, rbx_g1_nc5),
+                                   (fra_fr5_sbb2_nc5, rbx_g2_nc5))
+        for l in int_links:
+            print(l[0], l[1])
+            link = self.addLink(l[0], l[1], igp_cost=100)
+            link[l[0]].addParams(ospf_dead_int=40, igp_cost=5)
+            link[l[0]].addParams(ospf_hello_int=10, igp_cost=5)
+            link[l[1]].addParams(ospf_dead_int=40, igp_cost=5)
+            link[l[1]].addParams(ospf_hello_int=10, igp_cost=5)
+            
+            link[l[0]].addParams(ospf6_dead_int=40, igp_cost=5)
+            link[l[0]].addParams(ospf6_hello_int=10, igp_cost=5)
+            link[l[1]].addParams(ospf6_dead_int=40, igp_cost=5)
+            link[l[1]].addParams(ospf6_hello_int=10, igp_cost=5)
 
         self.set_hello_dead_int(all_links)
 
