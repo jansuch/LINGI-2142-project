@@ -115,7 +115,7 @@ class MyTopology(IPTopo):
             l[0].addParams(ospf_hello_int=10)
             l[1].addParams(ospf_dead_int=40)
             l[1].addParams(ospf_hello_int=10)
-            
+
     def setup_border_routers(self, routers):
         bogon_ipv4_transit_filter = [TransitFilter(default="ACCEPT", rules=[
                         Deny(proto='all', src='0.0.0.0/8'),
@@ -181,14 +181,15 @@ class MyTopology(IPTopo):
         LOCAL_PREF_LOW=['16276:7100',50]
         LOCAL_PREFS=[LOCAL_PREF_HIGH,LOCAL_PREF_LOW]
         all_al=AccessList('all',('any',))
-        
+
         #OVH_IPv4_prefix = "192.148.1.0/24"
         OVH_IPv4_prefix = "192.148.0.0/16"
         #OVH_IPv6_prefix = "2001:41D0:0000:00C0::/64"
         OVH_IPv6_prefix = "2001:41D0::/48"
-        
+
         all_links = []
-        
+
+
         # ================================================== START of London ==================================================
 
         lon_thw_sbb1_nc5 = self.addRouter("lon_1", config=RouterConfig, lo_addresses=["2001:41D0:0000:0280::/128", "192.148.3.0/32"])
@@ -241,7 +242,7 @@ class MyTopology(IPTopo):
 
         set_rr(self, rr=fra_1_n7, peers=[fra_1_border])
         set_rr(self, rr=fra_5_n7, peers=[fra_5_border])
-        
+
         #fra_1_n7.get_config(BGP).set_community(community='no-advertise', from_peer=fra_1_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ipaddress.ip_network("2001:4860::/32")))])
         #fra_5_n7.get_config(BGP).set_community(community='no-advertise', from_peer=fra_5_border, matching=[AccessList(entries=(ipaddress.ip_network("8.8.0.0/16"), ipaddress.ip_network("2001:4860::/32")))])
         # ^^^ Not working ^^^
@@ -327,7 +328,7 @@ class MyTopology(IPTopo):
         servers = [MyServer1, MyServer2, MyServer3]
 
         self.setup_servers(servers, server_routers)
-        all_links += self.addLinks((MyServer1, rbx_g1_nc5),# (MyServer1, rbx_g2_nc5),                    		   
+        all_links += self.addLinks((MyServer1, rbx_g1_nc5),# (MyServer1, rbx_g2_nc5),
                                    (MyServer2, rbx_g2_nc5),# (MyServer2, rbx_g1_nc5),
                                    (MyServer3, fra_fr5_sbb2_nc5))#, (MyServer3, fra_fr5_sbb1_nc5))#
         rbx_g1_nc5.get_config(BGP).set_community(community='no-export', from_peer=MyServer1)
@@ -354,14 +355,14 @@ class MyTopology(IPTopo):
         google_r2=self.addRouter("google_r2",config=RouterConfig,lo_addresses=["2001:4860:0:2::/128","8.8.5.2/32"])
         google_r3=self.addRouter("google_r3",config=RouterConfig,lo_addresses=["2001:4860:0:3::/128","8.8.5.3/32"])
         google_border_routers = [google_r1, google_r2, google_r3]
-        
+
         google_int=self.addRouter("google_int",config=RouterConfig,lo_addresses=["2001:4860:0:4::/128","8.8.5.4/32"])
         #google_i2=self.addRouter("google_i2",config=RouterConfig,lo_addresses=["2001:4860:0:5::/128","8.8.5.5/32"])
         #google_i3=self.addRouter("google_i3",config=RouterConfig,lo_addresses=["2001:4860:0:6::/128","8.8.5.6/32"])
         google_h1=self.addHost("google_h1")
         #google_h2=self.addHost("google_h2")
         #google_h3=self.addHost("google_h3")
-        
+
         '''
         google_r1i1 = self.addLink(google_i1, google_r1)
         google_r2i2 = self.addLink(google_i2, google_r2)
@@ -380,14 +381,14 @@ class MyTopology(IPTopo):
         	#(google_h2, google_i2),
         	#(google_h3, google_i3)
         )
-        
+
         self.addSubnet(nodes=[google_r1, google_int], subnets=["2001:4860:1:1::/64","8.8.1.0/30"])
         self.addSubnet(nodes=[google_r2, google_int], subnets=["2001:4860:1:2::/64","8.8.1.4/30"])
         self.addSubnet(nodes=[google_r3, google_int], subnets=["2001:4860:1:3::/64","8.8.1.8/30"])
         self.addSubnet(nodes=[google_int, google_h1], subnets=["2001:4860:1:4::/64","8.8.2.0/30"])
         #self.addSubnet(nodes=[google_i2, google_h2], subnets=["2001:4860:1:5::/64","8.8.2.4/30"])
         #self.addSubnet(nodes=[google_i3, google_h3], subnets=["2001:4860:1:6::/64","8.8.2.8/30"])
-        
+
         #self.addSubnet(nodes=[google_r1, google_h1], subnets=["2001:4860::/48","8.8.0.0/16"])
         #link_google_h1[google_h1].addParams(ip=("2001:4860:1:0::/64", "8.8.5.0/32"))
         #link_google_h1[google_r1].addParams(ip=("2001:4860:1:1::/64", "8.8.5.1/32"))
@@ -398,7 +399,7 @@ class MyTopology(IPTopo):
         self.addiBGPFullMesh(15169, routers=[google_r1, google_int, google_r2, google_r3])
         #self.addiBGPFullMesh(15169, routers=[google_r2, google_i2])
         #self.addiBGPFullMesh(15169, routers=[google_r3, google_i3])
-        
+
         self.addAS(15169,routers=google_border_routers + [google_int])
         #self.addLinks((par_gsw_sbb1_nc5,google_r1),(fra_5_n7,google_r3),(par_th2_sbb1_nc5,google_r2))#, (google_h1, google_r1))
         all_links += self.addLinks((par_gsw_border, google_r1), (fra_5_border, google_r3), (par_th2_border, google_r2))
@@ -616,30 +617,30 @@ class MyTopology(IPTopo):
 
         '''********************   ROUTE POLICIES     **********************************'''
         '''______________: this part was not implemented because of routemap issues, for more information see the report. (deny and permit does not work, no route map applied <=> error)'''
-        '''
-        lon_thw_border.get_config(BGP).deny(to_peer=telia_r3,matching=[CommunityList(community='16276:2010')])
-        lon_thw_border.get_config(BGP).deny(to_peer=cogent_r3,matching=[CommunityList(community='16276:2020')])
-        lon_thw_border.get_config(BGP).deny(to_peer=amazon_r2,matching=[CommunityList(community='16276:2050')])
 
-        fra_1_n7.get_config(BGP).deny(to_peer=vodafone_r3,matching=[CommunityList(community='16276:2030')])
-        fra_1_n7.get_config(BGP).deny(to_peer=telia_r1,matching=[CommunityList(community='16276:2010')])
+        lon_thw_border.get_config(BGP).deny(to_peer=telia_r3,matching=[CommunityList(community='16276:2010')],order=11)
+        lon_thw_border.get_config(BGP).deny(to_peer=cogent_r3,matching=[CommunityList(community='16276:2020')],order=12)
+        lon_thw_border.get_config(BGP).deny(to_peer=amazon_r2,matching=[CommunityList(community='16276:2050')],order=13)
 
-        fra_5_n7.get_config(BGP).deny(to_peer=google_r3,matching=[CommunityList(community='16276:2040')])
-        fra_5_n7.get_config(BGP).deny(to_peer=vodafone_r4,matching=[CommunityList(community='16276:2030')])
-        fra_5_n7.get_config(BGP).deny(to_peer=telia_r2,matching=[CommunityList(community='16276:2030')])
+        fra_1_n7.get_config(BGP).deny(to_peer=vodafone_r3,matching=[CommunityList(community='16276:2030')],order=14)
+        fra_1_n7.get_config(BGP).deny(to_peer=telia_r1,matching=[CommunityList(community='16276:2010')],order=15)
 
-        par_gsw_border.get_config(BGP).deny(to_peer=cogent_r1,matching=[CommunityList(community='16276:2020')])
-        par_gsw_border.get_config(BGP).deny(to_peer=google_r1,matching=[CommunityList(community='16276:2040')])
-        par_gsw_border.get_config(BGP).deny(to_peer=vodafone_r1,matching=[CommunityList(community='16276:2030')])
+        fra_5_n7.get_config(BGP).deny(to_peer=google_r3,matching=[CommunityList(community='16276:2040')],order=16)
+        fra_5_n7.get_config(BGP).deny(to_peer=vodafone_r4,matching=[CommunityList(community='16276:2030')],order=17)
+        fra_5_n7.get_config(BGP).deny(to_peer=telia_r2,matching=[CommunityList(community='16276:2030')],order=18)
 
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=google_r2,matching=[CommunityList(community='16276:2040')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=cogent_r2,matching=[CommunityList(community='16276:2020')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=amazon_r1,matching=[CommunityList(community='16276:2050')])
-        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=vodafone_r2,matching=[CommunityList(community='16276:2030')])
-        '''
+        par_gsw_border.get_config(BGP).deny(to_peer=cogent_r1,matching=[CommunityList(community='16276:2020')],order=19)
+        par_gsw_border.get_config(BGP).deny(to_peer=google_r1,matching=[CommunityList(community='16276:2040')],order=20)
+        par_gsw_border.get_config(BGP).deny(to_peer=vodafone_r1,matching=[CommunityList(community='16276:2030')],order=21)
+
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=google_r2,matching=[CommunityList(community='16276:2040')],order=22)
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=cogent_r2,matching=[CommunityList(community='16276:2020')],order=23)
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=amazon_r1,matching=[CommunityList(community='16276:2050')],order=24)
+        par_th2_sbb1_nc5.get_config(BGP).deny(to_peer=vodafone_r2,matching=[CommunityList(community='16276:2030')],order=25)
+
         '''********************   CUSTOM LOCAL-PREF     **********************************'''
-
-        '''setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
+        '''
+        setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=telia_r3,ipv4='2.255.248.3/32',ipv6='2001:2000:0:3::')
         setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=amazon_r2,ipv4='3.5.128.2/32',ipv6='2001:4f8:b:0:2::')
         setlocalPrefs(lon_thw_border,LOCAL_PREFS,fromPeer=cogent_r3,ipv4='2.58.4.3/32',ipv6='2001:550:0:3::')
 
@@ -674,20 +675,22 @@ class MyTopology(IPTopo):
         self.set_hello_dead_int(all_links)
 
         super().build(*args, **kwargs)
-def setLocalPref(router,localPref,communityNbr,fromPeer,ipv4,ipv6):
+def setLocalPref(router,localPref,communityNbr,fromPeer,ipv4,ipv6,orderCheck):
     router.get_config(BGP).set_local_pref(local_pref=localPref,
         from_peer=fromPeer,
         matching=[
             CommunityList(community=communityNbr),
             AccessList(entries=[ipv4,ipv6])
-        ])
+        ],orderCheck=orderCheck)
 
 def setlocalPrefs(router,localPrefCommList,fromPeer,ipv4,ipv6):
     all_al=AccessList('all',('any',))
-    router.get_config(BGP).permit(from_peer=fromPeer,matching=(all_al,)) #deault permit route
-    router.get_config(BGP).permit(to_peer=fromPeer,matching=(all_al,))  #deault permit route
+    #router.get_config(BGP).permit(from_peer=fromPeer,matching=(all_al,)) #deault permit route
+    #router.get_config(BGP).permit(to_peer=fromPeer,matching=(all_al,))  #deault permit route
+    i=1
     for e in localPrefCommList:
-        setLocalPref(router,localPref=e[1],communityNbr=e[0],fromPeer=fromPeer,ipv4=ipv4,ipv6=ipv6)
+        setLocalPref(router,localPref=e[1],communityNbr=e[0],fromPeer=fromPeer,ipv4=ipv4,ipv6=ipv6,orderCheck=i)
+        i+=1
 
 
 
